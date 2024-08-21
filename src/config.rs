@@ -1,6 +1,6 @@
 #[derive(Debug, serde::Deserialize, serde::Serialize)]
 pub struct Config {
-    window_title: String,
+    pub window_title: String,
 }
 
 impl Config {
