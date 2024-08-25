@@ -5,5 +5,5 @@ fn main() {
     let config = config::Config::read("config.json");
     println!("{:?}", config);
 
-    graphics::window::TreaxisApp::new(config.window_title);
+    graphics::app::TreaxisApp::new(config.window_title, config.fullscreen);
 }

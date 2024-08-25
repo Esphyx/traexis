@@ -1,6 +1,7 @@
 #[derive(Debug, serde::Deserialize, serde::Serialize)]
 pub struct Config {
     pub window_title: String,
+    pub fullscreen: bool,
 }
 
 impl Config {
@@ -14,6 +15,7 @@ impl Default for Config {
     fn default() -> Self {
         Self {
             window_title: String::from("Default title"),
+            fullscreen: false,
         }
     }
 }
