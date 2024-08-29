@@ -1,21 +1,22 @@
 use glium::{
     backend::glutin::Display,
     glutin::surface::WindowSurface,
+    index::{NoIndices, PrimitiveType},
     winit::{
         application::ApplicationHandler,
-        dpi::{LogicalPosition, PhysicalPosition},
-        event::WindowEvent,
+        dpi::PhysicalPosition,
+        event::{DeviceEvent, ElementState, RawKeyEvent, WindowEvent},
         event_loop::ActiveEventLoop,
         keyboard::{KeyCode, PhysicalKey},
         window::{Fullscreen, Window, WindowId},
     },
     Surface,
 };
-use rand::Rng;
+use treaxis_core::State;
 
 use crate::graphics::{
     linear_algebra::{normalize, rotate_x, rotate_y, scale},
-    vertex::Vertex,
+    vertex::Renderable,
 };
 
 use super::camera::Camera;
@@ -24,10 +25,9 @@ use super::camera::Camera;
 pub struct TreaxisApp {
     window: Window,
     display: Display<WindowSurface>,
+    state: State<{ crate::WIDTH }, { crate::HEIGHT }, { crate::DEPTH }>,
     camera: Camera,
-    cursor_lock: bool,
-    mouse_position: Option<PhysicalPosition<f64>>,
-    mouse_delta: (f32, f32),
+    delta: (f64, f64),
 }
 
 impl TreaxisApp {
@@ -35,6 +35,7 @@ impl TreaxisApp {
         let event_loop = glium::winit::event_loop::EventLoop::builder()
             .build()
             .expect("Could not create an event loop!");
+
         let (window, display) = glium::backend::glutin::SimpleWindowBuilder::new()
             .with_title(&title)
             .build(&event_loop);
@@ -47,10 +48,11 @@ impl TreaxisApp {
             window,
             display,
             camera: Camera::default(),
-            cursor_lock: true,
-            mouse_position: None,
-            mouse_delta: (0.0, 0.0),
+            delta: Default::default(),
+            state: Default::default(),
         };
+
+        app.window.set_cursor_visible(false);
 
         event_loop
             .run_app(&mut app)
@@ -63,8 +65,50 @@ impl ApplicationHandler for TreaxisApp {
         self.window.request_redraw();
     }
 
-    fn resumed(&mut self, _event_loop: &ActiveEventLoop) {
-        println!("resumed!");
+    fn resumed(&mut self, _event_loop: &ActiveEventLoop) {}
+
+    fn device_event(
+        &mut self,
+        _event_loop: &ActiveEventLoop,
+        _device_id: glium::winit::event::DeviceId,
+        event: DeviceEvent,
+    ) {
+        match event {
+            DeviceEvent::MouseMotion { delta } => {
+                self.delta = delta;
+                let (width, height): (f64, f64) = self.window.inner_size().into();
+                self.window
+                    .set_cursor_position(PhysicalPosition::new(
+                        width as f64 / 2.0,
+                        height as f64 / 2.0,
+                    ))
+                    .expect("Could not set cursor position!");
+            }
+            DeviceEvent::Key(key_event) => {
+                let RawKeyEvent {
+                    physical_key,
+                    state,
+                } = key_event;
+
+                match state {
+                    ElementState::Pressed => match physical_key {
+                        PhysicalKey::Code(keycode) => match keycode {
+                            KeyCode::F11 => {
+                                self.window.set_fullscreen(
+                                    self.window.fullscreen().is_none().then(|| {
+                                        Fullscreen::Borderless(self.window.primary_monitor())
+                                    }),
+                                );
+                            }
+                            _ => {}
+                        },
+                        _ => {}
+                    },
+                    _ => {}
+                }
+            }
+            _ => {}
+        }
     }
 
     fn window_event(
@@ -75,69 +119,20 @@ impl ApplicationHandler for TreaxisApp {
     ) {
         match event {
             WindowEvent::RedrawRequested => {
-                let (delta_x, _) = self.mouse_delta;
-                self.camera.set_direction(rotate_y(
-                    self.camera.get_direction(),
-                    delta_x as f32 * -0.01,
-                ));
-                self.mouse_delta = (0.0, 0.0);
-
-                if let Some(pos) = self.mouse_position {
-                    self.window
-                        .set_cursor_position(pos)
-                        .expect("Unable to set cursor position!");
-                }
-
                 let mut target = self.display.draw();
                 let (width, height) = target.get_dimensions();
 
-                let shape = vec![
-                    Vertex {
-                        position: [1.0, 0.0, 0.0],
-                    },
-                    Vertex {
-                        position: [0.0, 1.0, 0.0],
-                    },
-                    Vertex {
-                        position: [0.0, 0.0, 0.0],
-                    },
-                    Vertex {
-                        position: [1.0, 0.0, 0.0],
-                    },
-                    Vertex {
-                        position: [0.0, 0.0, 0.0],
-                    },
-                    Vertex {
-                        position: [0.0, 0.0, 1.0],
-                    },
-                    Vertex {
-                        position: [0.0, 0.0, 0.0],
-                    },
-                    Vertex {
-                        position: [0.0, 1.0, 0.0],
-                    },
-                    Vertex {
-                        position: [0.0, 0.0, 1.0],
-                    },
-                    Vertex {
-                        position: [1.0, 0.0, 0.0],
-                    },
-                    Vertex {
-                        position: [0.0, 1.0, 0.0],
-                    },
-                    Vertex {
-                        position: [0.0, 0.0, 1.0],
-                    },
-                ];
+                let (delta_x, delta_y) = self.delta;
+
+                self.camera
+                    .process_mouse(delta_x as f32 * 0.01, delta_y as f32 * 0.01);
+                self.delta = (0.0, 0.0);
+
+                let shape = self.state.to_vertices();
 
                 let vertex_buffer = glium::VertexBuffer::new(&self.display, &shape)
                     .expect("Could not create the vertex buffer!");
-                let indices = glium::IndexBuffer::new(
-                    &self.display,
-                    glium::index::PrimitiveType::TrianglesList,
-                    &[0u16, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
-                )
-                .expect("Could not create index buffer!");
+                let indices = NoIndices(PrimitiveType::TrianglesList);
 
                 let program = glium::Program::from_source(
                     &self.display,
@@ -175,22 +170,6 @@ impl ApplicationHandler for TreaxisApp {
             }
             WindowEvent::Resized(new_size) => {
                 self.display.resize((new_size.width, new_size.height));
-            }
-            WindowEvent::CursorMoved { position, .. } => {
-                if self.cursor_lock {
-                    if let Some(previous) = self.mouse_position {
-                        let (previous_x, previous_y): (f64, f64) = previous.into();
-                        let (x, y): (f64, f64) = position.into();
-
-                        let (delta_x, delta_y) = (x - previous_x, y - previous_y);
-                        println!(
-                            "cursor locked: {} delta({}, {})",
-                            self.cursor_lock, delta_x, delta_y
-                        );
-                        self.mouse_delta = (delta_x as f32, delta_y as f32);
-                    }
-                }
-                self.mouse_position = Some(position);
             }
             WindowEvent::CloseRequested => event_loop.exit(),
             WindowEvent::KeyboardInput { event, .. } => {
@@ -233,19 +212,6 @@ impl ApplicationHandler for TreaxisApp {
                         KeyCode::ArrowRight => self
                             .camera
                             .set_direction(rotate_y(self.camera.get_direction(), DELTA)),
-                        KeyCode::KeyL => {
-                            self.cursor_lock = !self.cursor_lock;
-                            // self.window.set_cursor_visible(self.cursor_lock);
-                            if self.cursor_lock {
-                                self.window
-                                    .set_cursor_grab(glium::winit::window::CursorGrabMode::Confined)
-                                    .expect("Couldn't set cursor grab mode!");
-                            } else {
-                                self.window
-                                    .set_cursor_grab(glium::winit::window::CursorGrabMode::None)
-                                    .expect("Couldn't set cursor grab mode!");
-                            }
-                        }
                         _ => {}
                     }
                 }

@@ -1,6 +1,4 @@
-use std::f32::consts::PI;
-
-use super::linear_algebra::{add, cross, dot, negate, normalize, subtract};
+use super::linear_algebra::{add, cross, dot, negate, normalize, rodrigues, subtract};
 
 #[derive(Debug)]
 pub struct Camera {
@@ -12,6 +10,7 @@ pub struct Camera {
     pub zfar: f32,
 }
 
+#[allow(unused)]
 impl Camera {
     #[inline]
     pub fn forward(&self) -> [f32; 3] {
@@ -50,6 +49,14 @@ impl Camera {
 }
 
 impl Camera {
+    pub fn process_mouse(&mut self, delta_x: f32, delta_y: f32) {
+        self.set_direction(rodrigues(
+            rodrigues(subtract(self.target, self.eye), self.up, delta_x),
+            self.right(),
+            delta_y,
+        ));
+    }
+
     pub fn set_direction(&mut self, direction: [f32; 3]) {
         self.target = add(self.eye, direction);
     }

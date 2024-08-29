@@ -86,3 +86,32 @@ pub fn scale(vector: [f32; 3], multiplier: f32) -> [f32; 3] {
         vector[2] * multiplier,
     ]
 }
+
+#[inline]
+pub fn rodrigues(vector: [f32; 3], axis: [f32; 3], angle: f32) -> [f32; 3] {
+    add(
+        add(
+            scale(vector, angle.cos()),
+            scale(cross(axis, vector), angle.sin()),
+        ),
+        scale(axis, dot(axis, vector) * (1.0 - angle.cos())),
+    )
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::graphics::linear_algebra::{add, subtract};
+
+    #[test]
+    pub fn addition() {
+        assert_eq!(add([2.4, 4.6, 4.7], [-6.6, 2.4, 6.3]), [-4.2, 7.0, 11.0])
+    }
+
+    #[test]
+    pub fn subtraction() {
+        assert_eq!(
+            subtract([0.6, -2.8, -2.6], [4.1, 3.2, 6.8]),
+            [-3.5, -6.0, -9.4]
+        );
+    }
+}

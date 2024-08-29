@@ -1,5 +1,6 @@
 use std::fmt::Display;
 
+#[derive(Clone, Copy, Default)]
 pub struct Bitboard<const WIDTH: usize, const DEPTH: usize> {
     value: u64,
 }

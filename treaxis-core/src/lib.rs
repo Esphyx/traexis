@@ -6,6 +6,16 @@ pub struct State<const WIDTH: usize, const HEIGHT: usize, const DEPTH: usize> {
     pub playfield: [bitboard::Bitboard<WIDTH, DEPTH>; HEIGHT],
 }
 
+impl<const WIDTH: usize, const HEIGHT: usize, const DEPTH: usize> Default
+    for State<WIDTH, HEIGHT, DEPTH>
+{
+    fn default() -> Self {
+        Self {
+            playfield: [bitboard::Bitboard::<WIDTH, DEPTH>::default(); HEIGHT],
+        }
+    }
+}
+
 #[cfg(test)]
 pub mod tests {
     use super::queue::{pattern::*, tetromino::*, Parsing, Queue};
