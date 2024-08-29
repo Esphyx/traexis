@@ -1,6 +1,7 @@
 #[derive(
     strum_macros::EnumIter,
     strum_macros::EnumString,
+    strum_macros::EnumCount,
     PartialEq,
     Eq,
     Debug,
@@ -10,6 +11,7 @@
     Clone,
     Copy,
 )]
+#[repr(usize)]
 pub enum Tetromino {
     I,
     O,

@@ -1,3 +1,5 @@
+use core::f32;
+
 use glium::{
     backend::glutin::Display,
     glutin::surface::WindowSurface,
@@ -15,7 +17,7 @@ use glium::{
 use treaxis_core::State;
 
 use crate::graphics::{
-    linear_algebra::{normalize, rotate_x, rotate_y, scale},
+    linear_algebra::{normalize, scale},
     vertex::Renderable,
 };
 
@@ -47,7 +49,7 @@ impl TreaxisApp {
         let mut app = TreaxisApp {
             window,
             display,
-            camera: Camera::default(),
+            camera: Default::default(),
             delta: Default::default(),
             state: Default::default(),
         };
@@ -57,6 +59,15 @@ impl TreaxisApp {
         event_loop
             .run_app(&mut app)
             .expect("Could not run the event loop!");
+    }
+
+    pub fn toggle_fullscreen(&mut self) {
+        self.window.set_fullscreen(
+            self.window
+                .fullscreen()
+                .is_none()
+                .then(|| Fullscreen::Borderless(self.window.primary_monitor())),
+        );
     }
 }
 
@@ -93,13 +104,7 @@ impl ApplicationHandler for TreaxisApp {
                 match state {
                     ElementState::Pressed => match physical_key {
                         PhysicalKey::Code(keycode) => match keycode {
-                            KeyCode::F11 => {
-                                self.window.set_fullscreen(
-                                    self.window.fullscreen().is_none().then(|| {
-                                        Fullscreen::Borderless(self.window.primary_monitor())
-                                    }),
-                                );
-                            }
+                            KeyCode::F11 => self.toggle_fullscreen(),
                             _ => {}
                         },
                         _ => {}
@@ -190,28 +195,8 @@ impl ApplicationHandler for TreaxisApp {
                         KeyCode::KeyD => {
                             self.camera.mv(scale(normalize(self.camera.right()), DELTA));
                         }
-                        KeyCode::Space => {
-                            self.camera.eye[1] += DELTA;
-                            self.camera.target[1] += DELTA;
-                        }
-                        KeyCode::ShiftLeft => {
-                            self.camera.eye[1] -= DELTA;
-                            self.camera.target[1] -= DELTA;
-                        }
-                        KeyCode::Comma => self.camera.fov -= DELTA,
-                        KeyCode::Period => self.camera.fov += DELTA,
-                        KeyCode::ArrowUp => self
-                            .camera
-                            .set_direction(rotate_x(self.camera.get_direction(), DELTA)),
-                        KeyCode::ArrowLeft => self
-                            .camera
-                            .set_direction(rotate_y(self.camera.get_direction(), -DELTA)),
-                        KeyCode::ArrowDown => self
-                            .camera
-                            .set_direction(rotate_x(self.camera.get_direction(), -DELTA)),
-                        KeyCode::ArrowRight => self
-                            .camera
-                            .set_direction(rotate_y(self.camera.get_direction(), DELTA)),
+                        KeyCode::Space => self.camera.mv([0.0, DELTA, 0.0]),
+                        KeyCode::ShiftLeft => self.camera.mv([0.0, -DELTA, 0.0]),
                         _ => {}
                     }
                 }

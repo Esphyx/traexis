@@ -2,12 +2,12 @@ use super::linear_algebra::{add, cross, dot, negate, normalize, rodrigues, subtr
 
 #[derive(Debug)]
 pub struct Camera {
-    pub eye: [f32; 3],
-    pub target: [f32; 3],
-    pub up: [f32; 3],
-    pub fov: f32,
-    pub znear: f32,
-    pub zfar: f32,
+    eye: [f32; 3],
+    target: [f32; 3],
+    up: [f32; 3],
+    fov: f32,
+    znear: f32,
+    zfar: f32,
 }
 
 #[allow(unused)]
@@ -29,7 +29,7 @@ impl Camera {
 
     #[inline]
     pub fn left(&self) -> [f32; 3] {
-        negate(self.right())
+        cross(self.up, self.back())
     }
 
     #[inline]
@@ -50,19 +50,14 @@ impl Camera {
 
 impl Camera {
     pub fn process_mouse(&mut self, delta_x: f32, delta_y: f32) {
-        self.set_direction(rodrigues(
-            rodrigues(subtract(self.target, self.eye), self.up, delta_x),
-            self.right(),
-            delta_y,
-        ));
-    }
-
-    pub fn set_direction(&mut self, direction: [f32; 3]) {
-        self.target = add(self.eye, direction);
-    }
-
-    pub fn get_direction(&self) -> [f32; 3] {
-        subtract(self.target, self.eye)
+        self.target = add(
+            self.eye,
+            rodrigues(
+                rodrigues(subtract(self.target, self.eye), self.up, delta_x),
+                self.right(),
+                delta_y,
+            ),
+        );
     }
 
     pub fn perspective(&self, width: u32, height: u32) -> [[f32; 4]; 4] {
@@ -110,10 +105,10 @@ impl Default for Camera {
     fn default() -> Self {
         Self {
             eye: [0.0, 0.0, 2.0],
-            target: [0.0, 0.0, 0.0],
+            target: [0.0, 0.0, 1.0],
             up: [0.0, 1.0, 0.0],
             fov: 90f32.to_radians(),
-            znear: 0.1,
+            znear: 0.01,
             zfar: 1024.0,
         }
     }
