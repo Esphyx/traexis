@@ -16,9 +16,12 @@ use glium::{
 };
 use treaxis_core::State;
 
-use crate::graphics::{
-    linear_algebra::{normalize, scale},
-    vertex::Renderable,
+use crate::{
+    graphics::{
+        linear_algebra::{normalize, scale},
+        vertex::Renderable,
+    },
+    DEPTH, HEIGHT, WIDTH,
 };
 
 use super::camera::Camera;
@@ -53,6 +56,24 @@ impl TreaxisApp {
             delta: Default::default(),
             state: Default::default(),
         };
+
+        let current = &app.state.current;
+        let shape = current.get_shape();
+        for (x, r) in shape.iter().enumerate() {
+            for (y, c) in r.iter().enumerate() {
+                for (z, b) in c.iter().enumerate() {
+                    if !b {
+                        continue;
+                    }
+                    let [px, py, pz] = current.position;
+
+                    let [ax, ay, az] = [px + x, py + y, pz + z];
+                    if ax < WIDTH && ay < HEIGHT && az < DEPTH {
+                        app.state.playfield[ay].set(x, z);
+                    }
+                }
+            }
+        }
 
         app.window.set_cursor_visible(false);
 
@@ -156,15 +177,13 @@ impl ApplicationHandler for TreaxisApp {
                     ..Default::default()
                 };
 
-                let light = [1.0f32, 1.0, 1.0];
-                target.clear_color_and_depth((0.0, 0.0, 0.0, 1.0), 1.0);
+                target.clear_color_and_depth((0.01, 0.01, 0.01, 1.0), 1.0);
                 target
                     .draw(
                         &vertex_buffer,
                         &indices,
                         &program,
                         &glium::uniform! {
-                            light: light,
                             view: self.camera.view_matrix(),
                             perspective: self.camera.perspective(width, height)
                         },
@@ -179,7 +198,7 @@ impl ApplicationHandler for TreaxisApp {
             WindowEvent::CloseRequested => event_loop.exit(),
             WindowEvent::KeyboardInput { event, .. } => {
                 if let PhysicalKey::Code(keycode) = event.physical_key {
-                    const DELTA: f32 = 0.01;
+                    const DELTA: f32 = 0.05;
                     match keycode {
                         KeyCode::Escape => event_loop.exit(),
                         KeyCode::KeyW => {

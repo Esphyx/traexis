@@ -1,8 +1,11 @@
+use piece::{Piece, Rotation};
+
 pub mod bitboard;
 pub mod piece;
 pub mod queue;
 
 pub struct State<const WIDTH: usize, const HEIGHT: usize, const DEPTH: usize> {
+    pub current: Piece,
     pub playfield: [bitboard::Bitboard<WIDTH, DEPTH>; HEIGHT],
 }
 
@@ -11,6 +14,14 @@ impl<const WIDTH: usize, const HEIGHT: usize, const DEPTH: usize> Default
 {
     fn default() -> Self {
         Self {
+            current: Piece {
+                position: [0, 0, 0],
+                rotation: Rotation {
+                    direction: piece::Face::Right,
+                    angle: piece::Turn::No,
+                },
+                tetromino: queue::tetromino::Tetromino::I,
+            },
             playfield: [bitboard::Bitboard::<WIDTH, DEPTH>::default(); HEIGHT],
         }
     }
