@@ -17,7 +17,7 @@ impl<const WIDTH: usize, const HEIGHT: usize, const DEPTH: usize> Default
             current: Piece {
                 position: [0, 0, 0],
                 rotation: Rotation {
-                    direction: piece::Face::Right,
+                    direction: piece::Face::Back,
                     angle: piece::Turn::No,
                 },
                 tetromino: queue::tetromino::Tetromino::I,

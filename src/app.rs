@@ -24,18 +24,17 @@ use crate::{
     DEPTH, HEIGHT, WIDTH,
 };
 
-use super::camera::Camera;
+use super::graphics::camera::Camera;
 
 #[allow(dead_code)]
-pub struct TreaxisApp {
+pub struct App {
     window: Window,
     display: Display<WindowSurface>,
     state: State<{ crate::WIDTH }, { crate::HEIGHT }, { crate::DEPTH }>,
     camera: Camera,
-    delta: (f64, f64),
 }
 
-impl TreaxisApp {
+impl App {
     pub fn new(title: String, fullscreen: bool) {
         let event_loop = glium::winit::event_loop::EventLoop::builder()
             .build()
@@ -45,24 +44,23 @@ impl TreaxisApp {
             .with_title(&title)
             .build(&event_loop);
 
-        if fullscreen {
-            window.set_fullscreen(Some(Fullscreen::Borderless(window.primary_monitor())));
-        }
-
-        let mut app = TreaxisApp {
+        let mut app = App {
             window,
             display,
             camera: Default::default(),
-            delta: Default::default(),
             state: Default::default(),
         };
 
+        if fullscreen {
+            app.toggle_fullscreen();
+        }
+
         let current = &app.state.current;
         let shape = current.get_shape();
-        for (x, r) in shape.iter().enumerate() {
-            for (y, c) in r.iter().enumerate() {
-                for (z, b) in c.iter().enumerate() {
-                    if !b {
+        for (x, row) in shape.iter().enumerate() {
+            for (y, column) in row.iter().enumerate() {
+                for (z, boolean) in column.iter().enumerate() {
+                    if !boolean {
                         continue;
                     }
                     let [px, py, pz] = current.position;
@@ -74,6 +72,8 @@ impl TreaxisApp {
                 }
             }
         }
+
+        app.state.playfield[0].set(0, 0);
 
         app.window.set_cursor_visible(false);
 
@@ -92,7 +92,7 @@ impl TreaxisApp {
     }
 }
 
-impl ApplicationHandler for TreaxisApp {
+impl ApplicationHandler for App {
     fn about_to_wait(&mut self, _event_loop: &ActiveEventLoop) {
         self.window.request_redraw();
     }
@@ -107,7 +107,7 @@ impl ApplicationHandler for TreaxisApp {
     ) {
         match event {
             DeviceEvent::MouseMotion { delta } => {
-                self.delta = delta;
+                let (delta_x, delta_y) = delta;
                 let (width, height): (f64, f64) = self.window.inner_size().into();
                 self.window
                     .set_cursor_position(PhysicalPosition::new(
@@ -115,6 +115,9 @@ impl ApplicationHandler for TreaxisApp {
                         height as f64 / 2.0,
                     ))
                     .expect("Could not set cursor position!");
+
+                self.camera
+                    .process_mouse(delta_x as f32 * 0.001, delta_y as f32 * 0.001);
             }
             DeviceEvent::Key(key_event) => {
                 let RawKeyEvent {
@@ -148,12 +151,6 @@ impl ApplicationHandler for TreaxisApp {
                 let mut target = self.display.draw();
                 let (width, height) = target.get_dimensions();
 
-                let (delta_x, delta_y) = self.delta;
-
-                self.camera
-                    .process_mouse(delta_x as f32 * 0.01, delta_y as f32 * 0.01);
-                self.delta = (0.0, 0.0);
-
                 let shape = self.state.to_vertices();
 
                 let vertex_buffer = glium::VertexBuffer::new(&self.display, &shape)
@@ -162,8 +159,8 @@ impl ApplicationHandler for TreaxisApp {
 
                 let program = glium::Program::from_source(
                     &self.display,
-                    include_str!("shaders/vertex_shader.glsl"),
-                    include_str!("shaders/fragment_shader.glsl"),
+                    include_str!("graphics/shaders/vertex_shader.glsl"),
+                    include_str!("graphics/shaders/fragment_shader.glsl"),
                     None,
                 )
                 .expect("Could not compile program!");
@@ -184,6 +181,9 @@ impl ApplicationHandler for TreaxisApp {
                         &indices,
                         &program,
                         &glium::uniform! {
+                            width: crate::WIDTH as f32,
+                            height: crate::HEIGHT as f32,
+                            depth: crate::DEPTH as f32,
                             view: self.camera.view_matrix(),
                             perspective: self.camera.perspective(width, height)
                         },
