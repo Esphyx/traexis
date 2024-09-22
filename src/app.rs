@@ -7,24 +7,25 @@ use glium::{
     winit::{
         application::ApplicationHandler,
         dpi::PhysicalPosition,
-        event::{DeviceEvent, ElementState, RawKeyEvent, WindowEvent},
+        event::*,
         event_loop::ActiveEventLoop,
         keyboard::{KeyCode, PhysicalKey},
-        window::{Fullscreen, Window, WindowId},
+        window::*,
     },
-    Surface,
+    Program, Surface, VertexBuffer,
 };
 use treaxis_core::State;
 
 use crate::{
-    graphics::{
-        linear_algebra::{normalize, scale},
-        vertex::Renderable,
+    client::{
+        linear_algebra::{add, normalize, scale},
+        renderable::Renderable,
+        vertex::Vertex,
     },
     DEPTH, HEIGHT, WIDTH,
 };
 
-use super::graphics::camera::Camera;
+use super::client::camera::Camera;
 
 #[allow(dead_code)]
 pub struct App {
@@ -59,21 +60,18 @@ impl App {
         let shape = current.get_shape();
         for (x, row) in shape.iter().enumerate() {
             for (y, column) in row.iter().enumerate() {
-                for (z, boolean) in column.iter().enumerate() {
-                    if !boolean {
+                for (z, included) in column.iter().enumerate() {
+                    if !included {
                         continue;
                     }
-                    let [px, py, pz] = current.position;
 
-                    let [ax, ay, az] = [px + x, py + y, pz + z];
+                    let [ax, ay, az] = add(current.position, [x, y, z]);
                     if ax < WIDTH && ay < HEIGHT && az < DEPTH {
                         app.state.playfield[ay].set(x, z);
                     }
                 }
             }
         }
-
-        app.state.playfield[0].set(0, 0);
 
         app.window.set_cursor_visible(false);
 
@@ -149,18 +147,15 @@ impl ApplicationHandler for App {
         match event {
             WindowEvent::RedrawRequested => {
                 let mut target = self.display.draw();
+
                 let (width, height) = target.get_dimensions();
 
-                let shape = self.state.to_vertices();
+                target.clear_color_and_depth((0.01, 0.01, 0.01, 1.0), 1.0);
 
-                let vertex_buffer = glium::VertexBuffer::new(&self.display, &shape)
-                    .expect("Could not create the vertex buffer!");
-                let indices = NoIndices(PrimitiveType::TrianglesList);
-
-                let program = glium::Program::from_source(
+                let program = Program::from_source(
                     &self.display,
-                    include_str!("graphics/shaders/vertex_shader.glsl"),
-                    include_str!("graphics/shaders/fragment_shader.glsl"),
+                    include_str!("client/shaders/vertex_shader.glsl"),
+                    include_str!("client/shaders/fragment_shader.glsl"),
                     None,
                 )
                 .expect("Could not compile program!");
@@ -174,19 +169,66 @@ impl ApplicationHandler for App {
                     ..Default::default()
                 };
 
-                target.clear_color_and_depth((0.01, 0.01, 0.01, 1.0), 1.0);
+                let uniforms = glium::uniform! {
+                    width: crate::WIDTH as f32,
+                    height: crate::HEIGHT as f32,
+                    depth: crate::DEPTH as f32,
+                    view: self.camera.view_matrix(),
+                    perspective: self.camera.perspective(width, height)
+                };
+
+                const SIZE: f32 = 5.;
+                let axes = vec![
+                    Vertex {
+                        position: [-SIZE, 0., 0.],
+                        color: [1., 0., 0.],
+                    },
+                    Vertex {
+                        position: [SIZE, 0., 0.],
+                        color: [1., 0., 0.],
+                    },
+                    Vertex {
+                        position: [0., -SIZE, 0.],
+                        color: [0., 1., 0.],
+                    },
+                    Vertex {
+                        position: [0., SIZE, 0.],
+                        color: [0., 1., 0.],
+                    },
+                    Vertex {
+                        position: [0., 0., -SIZE],
+                        color: [0., 0., 1.],
+                    },
+                    Vertex {
+                        position: [0., 0., SIZE],
+                        color: [0., 0., 1.],
+                    },
+                ];
+                let vertex_buffer = VertexBuffer::new(&self.display, &axes)
+                    .expect("Could not create a vertex buffer!");
+
+                let indices = NoIndices(PrimitiveType::LinesList);
+
                 target
                     .draw(
                         &vertex_buffer,
                         &indices,
                         &program,
-                        &glium::uniform! {
-                            width: crate::WIDTH as f32,
-                            height: crate::HEIGHT as f32,
-                            depth: crate::DEPTH as f32,
-                            view: self.camera.view_matrix(),
-                            perspective: self.camera.perspective(width, height)
-                        },
+                        &uniforms,
+                        &draw_parameters,
+                    )
+                    .expect("Could not draw");
+
+                let vertex_buffer = VertexBuffer::new(&self.display, &self.state.to_vertices())
+                    .expect("Could not create the vertex buffer!");
+                let indices = NoIndices(PrimitiveType::TrianglesList);
+
+                target
+                    .draw(
+                        &vertex_buffer,
+                        &indices,
+                        &program,
+                        &uniforms,
                         &draw_parameters,
                     )
                     .expect("Could not draw");

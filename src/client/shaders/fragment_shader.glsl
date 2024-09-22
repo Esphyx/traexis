@@ -8,6 +8,5 @@ uniform float height;
 uniform float depth;
 
 void main() {
-    vec3 scaled = vec3(vertex_position.x / width, vertex_position.y / height, vertex_position.z / depth);
-    gl_FragColor = vec4(scaled, 1.0);
+    gl_FragColor = vec4(vertex_color, 1.0);
 }

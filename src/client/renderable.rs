@@ -61,10 +61,10 @@ impl Renderable for State<{ crate::WIDTH }, { crate::HEIGHT }, { crate::DEPTH }>
                 for z in 0..crate::DEPTH {
                     if bitboard.get(x, z) {
                         cube.iter().for_each(|cube_vertex| {
-                            vertices.push(Vertex::from(add(
-                                [x as f32, y as f32, z as f32],
-                                cube_vertex.position,
-                            )))
+                            vertices.push(Vertex {
+                                position: add([x as f32, y as f32, z as f32], cube_vertex.position),
+                                color: self.current.tetromino.get_color(),
+                            })
                         });
                     }
                 }

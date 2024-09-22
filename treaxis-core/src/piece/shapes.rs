@@ -15,6 +15,7 @@ const N: usize = 4;
 pub const SHAPES: [[[[[[bool; N]; N]; N]; super::Turn::COUNT]; super::Face::COUNT];
     Tetromino::COUNT] = [
     compute_orientations([
+        // I
         [
             [false, false, false, false],
             [false, true, false, false],
@@ -41,6 +42,7 @@ pub const SHAPES: [[[[[[bool; N]; N]; N]; super::Turn::COUNT]; super::Face::COUN
         ],
     ]),
     compute_orientations([
+        // O
         [
             [false, false, false, false],
             [false, false, false, false],
@@ -49,13 +51,40 @@ pub const SHAPES: [[[[[[bool; N]; N]; N]; super::Turn::COUNT]; super::Face::COUN
         ],
         [
             [false, false, false, false],
+            [false, true, false, false],
+            [false, true, false, false],
             [false, false, false, false],
+        ],
+        [
             [false, false, false, false],
+            [false, true, false, false],
+            [false, true, false, false],
             [false, false, false, false],
         ],
         [
             [false, false, false, false],
             [false, false, false, false],
+            [false, false, false, false],
+            [false, false, false, false],
+        ],
+    ]),
+    compute_orientations([
+        // T
+        [
+            [false, false, false, false],
+            [false, true, false, false],
+            [false, false, false, false],
+            [false, false, false, false],
+        ],
+        [
+            [false, false, false, false],
+            [false, true, false, false],
+            [false, true, false, false],
+            [false, false, false, false],
+        ],
+        [
+            [false, false, false, false],
+            [false, true, false, false],
             [false, false, false, false],
             [false, false, false, false],
         ],
@@ -67,10 +96,23 @@ pub const SHAPES: [[[[[[bool; N]; N]; N]; super::Turn::COUNT]; super::Face::COUN
         ],
     ]),
     compute_orientations([
+        // L
         [
             [false, false, false, false],
+            [false, true, false, false],
             [false, false, false, false],
             [false, false, false, false],
+        ],
+        [
+            [false, false, false, false],
+            [false, true, false, false],
+            [false, false, false, false],
+            [false, false, false, false],
+        ],
+        [
+            [false, false, false, false],
+            [false, true, false, false],
+            [false, true, false, false],
             [false, false, false, false],
         ],
         [
@@ -79,9 +121,51 @@ pub const SHAPES: [[[[[[bool; N]; N]; N]; super::Turn::COUNT]; super::Face::COUN
             [false, false, false, false],
             [false, false, false, false],
         ],
+    ]),
+    compute_orientations([
+        // S
+        [
+            [false, false, false, false],
+            [false, true, false, false],
+            [false, false, false, false],
+            [false, false, false, false],
+        ],
+        [
+            [false, false, false, false],
+            [false, true, false, false],
+            [false, true, false, false],
+            [false, false, false, false],
+        ],
         [
             [false, false, false, false],
             [false, false, false, false],
+            [false, true, false, false],
+            [false, false, false, false],
+        ],
+        [
+            [false, false, false, false],
+            [false, false, false, false],
+            [false, false, false, false],
+            [false, false, false, false],
+        ],
+    ]),
+    compute_orientations([
+        // B
+        [
+            [false, false, false, false],
+            [false, false, false, false],
+            [false, false, false, false],
+            [false, false, false, false],
+        ],
+        [
+            [false, false, false, false],
+            [false, true, true, false],
+            [false, false, true, false],
+            [false, false, false, false],
+        ],
+        [
+            [false, false, false, false],
+            [false, false, true, false],
             [false, false, false, false],
             [false, false, false, false],
         ],
@@ -93,6 +177,7 @@ pub const SHAPES: [[[[[[bool; N]; N]; N]; super::Turn::COUNT]; super::Face::COUN
         ],
     ]),
     compute_orientations([
+        // D
         [
             [false, false, false, false],
             [false, false, false, false],
@@ -101,39 +186,13 @@ pub const SHAPES: [[[[[[bool; N]; N]; N]; super::Turn::COUNT]; super::Face::COUN
         ],
         [
             [false, false, false, false],
-            [false, false, false, false],
-            [false, false, false, false],
-            [false, false, false, false],
-        ],
-        [
-            [false, false, false, false],
-            [false, false, false, false],
-            [false, false, false, false],
+            [false, false, true, false],
+            [false, false, true, false],
             [false, false, false, false],
         ],
         [
             [false, false, false, false],
-            [false, false, false, false],
-            [false, false, false, false],
-            [false, false, false, false],
-        ],
-    ]),
-    compute_orientations([
-        [
-            [false, false, false, false],
-            [false, false, false, false],
-            [false, false, false, false],
-            [false, false, false, false],
-        ],
-        [
-            [false, false, false, false],
-            [false, false, false, false],
-            [false, false, false, false],
-            [false, false, false, false],
-        ],
-        [
-            [false, false, false, false],
-            [false, false, false, false],
+            [false, true, true, false],
             [false, false, false, false],
             [false, false, false, false],
         ],
@@ -145,6 +204,7 @@ pub const SHAPES: [[[[[[bool; N]; N]; N]; super::Turn::COUNT]; super::Face::COUN
         ],
     ]),
     compute_orientations([
+        // F
         [
             [false, false, false, false],
             [false, false, false, false],
@@ -153,65 +213,13 @@ pub const SHAPES: [[[[[[bool; N]; N]; N]; super::Turn::COUNT]; super::Face::COUN
         ],
         [
             [false, false, false, false],
-            [false, false, false, false],
-            [false, false, false, false],
-            [false, false, false, false],
-        ],
-        [
-            [false, false, false, false],
-            [false, false, false, false],
-            [false, false, false, false],
+            [false, false, true, false],
+            [false, true, true, false],
             [false, false, false, false],
         ],
         [
             [false, false, false, false],
-            [false, false, false, false],
-            [false, false, false, false],
-            [false, false, false, false],
-        ],
-    ]),
-    compute_orientations([
-        [
-            [false, false, false, false],
-            [false, false, false, false],
-            [false, false, false, false],
-            [false, false, false, false],
-        ],
-        [
-            [false, false, false, false],
-            [false, false, false, false],
-            [false, false, false, false],
-            [false, false, false, false],
-        ],
-        [
-            [false, false, false, false],
-            [false, false, false, false],
-            [false, false, false, false],
-            [false, false, false, false],
-        ],
-        [
-            [false, false, false, false],
-            [false, false, false, false],
-            [false, false, false, false],
-            [false, false, false, false],
-        ],
-    ]),
-    compute_orientations([
-        [
-            [false, false, false, false],
-            [false, false, false, false],
-            [false, false, false, false],
-            [false, false, false, false],
-        ],
-        [
-            [false, false, false, false],
-            [false, false, false, false],
-            [false, false, false, false],
-            [false, false, false, false],
-        ],
-        [
-            [false, false, false, false],
-            [false, false, false, false],
+            [false, false, true, false],
             [false, false, false, false],
             [false, false, false, false],
         ],

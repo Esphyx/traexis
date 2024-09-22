@@ -1,6 +1,8 @@
 mod app;
+mod client;
 mod config;
-mod graphics;
+
+use app::*;
 
 const WIDTH: usize = 4;
 const HEIGHT: usize = 20;
@@ -10,5 +12,5 @@ fn main() {
     let config = config::Config::read("config.json");
     println!("{:?}", config);
 
-    app::App::new(config.window_title, config.fullscreen);
+    App::new(config.window_title, config.fullscreen);
 }

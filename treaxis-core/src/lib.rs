@@ -17,10 +17,10 @@ impl<const WIDTH: usize, const HEIGHT: usize, const DEPTH: usize> Default
             current: Piece {
                 position: [0, 0, 0],
                 rotation: Rotation {
-                    direction: piece::Face::Back,
+                    direction: piece::Face::Bottom,
                     angle: piece::Turn::No,
                 },
-                tetromino: queue::tetromino::Tetromino::I,
+                tetromino: queue::tetromino::Tetromino::S,
             },
             playfield: [bitboard::Bitboard::<WIDTH, DEPTH>::default(); HEIGHT],
         }

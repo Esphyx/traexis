@@ -8,7 +8,7 @@ impl From<[f32; 3]> for Vertex {
     fn from(value: [f32; 3]) -> Self {
         Self {
             position: value,
-            color: [0.5; 3],
+            color: [0.; 3],
         }
     }
 }

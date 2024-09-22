@@ -1,7 +1,10 @@
 #![allow(unused)]
 
 #[inline]
-pub fn add(first: [f32; 3], second: [f32; 3]) -> [f32; 3] {
+pub fn add<T>(first: [T; 3], second: [T; 3]) -> [T; 3]
+where
+    T: std::ops::Add<Output = T> + Copy,
+{
     [
         first[0] + second[0],
         first[1] + second[1],
@@ -10,7 +13,10 @@ pub fn add(first: [f32; 3], second: [f32; 3]) -> [f32; 3] {
 }
 
 #[inline]
-pub fn subtract(first: [f32; 3], second: [f32; 3]) -> [f32; 3] {
+pub fn subtract<T>(first: [T; 3], second: [T; 3]) -> [T; 3]
+where
+    T: std::ops::Sub<Output = T> + Copy,
+{
     [
         first[0] - second[0],
         first[1] - second[1],
@@ -19,12 +25,18 @@ pub fn subtract(first: [f32; 3], second: [f32; 3]) -> [f32; 3] {
 }
 
 #[inline]
-pub fn negate(vector: [f32; 3]) -> [f32; 3] {
+pub fn negate<T>(vector: [T; 3]) -> [T; 3]
+where
+    T: std::ops::Neg<Output = T> + Copy,
+{
     [-vector[0], -vector[1], -vector[2]]
 }
 
 #[inline]
-pub fn cross(first: [f32; 3], second: [f32; 3]) -> [f32; 3] {
+pub fn cross<T>(first: [T; 3], second: [T; 3]) -> [T; 3]
+where
+    T: std::ops::Mul<Output = T> + std::ops::Sub<Output = T> + Copy,
+{
     [
         first[1] * second[2] - first[2] * second[1],
         first[2] * second[0] - first[0] * second[2],
@@ -74,12 +86,18 @@ pub fn rotate_z(vector: [f32; 3], angle: f32) -> [f32; 3] {
 }
 
 #[inline]
-pub fn dot(first: [f32; 3], second: [f32; 3]) -> f32 {
+pub fn dot<T>(first: [T; 3], second: [T; 3]) -> T
+where
+    T: std::ops::Mul<Output = T> + std::ops::Add<Output = T> + Copy,
+{
     first[0] * second[0] + first[1] * second[1] + first[2] * second[2]
 }
 
 #[inline]
-pub fn scale(vector: [f32; 3], multiplier: f32) -> [f32; 3] {
+pub fn scale<T>(vector: [T; 3], multiplier: T) -> [T; 3]
+where
+    T: std::ops::Mul<Output = T> + Copy,
+{
     [
         vector[0] * multiplier,
         vector[1] * multiplier,
@@ -100,7 +118,7 @@ pub fn rodrigues(vector: [f32; 3], axis: [f32; 3], angle: f32) -> [f32; 3] {
 
 #[cfg(test)]
 mod tests {
-    use crate::graphics::linear_algebra::{add, subtract};
+    use crate::client::linear_algebra::{add, subtract};
 
     #[test]
     pub fn addition() {

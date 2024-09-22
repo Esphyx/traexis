@@ -23,6 +23,21 @@ pub enum Tetromino {
     F,
 }
 
+impl Tetromino {
+    pub fn get_color(&self) -> [f32; 3] {
+        match self {
+            Tetromino::I => [0., 1., 1.],
+            Tetromino::O => [1., 1., 0.],
+            Tetromino::T => [1., 0., 1.],
+            Tetromino::L => [1., 0.5, 0.],
+            Tetromino::S => [0., 1., 0.],
+            Tetromino::B => [0.5, 0.15, 0.],
+            Tetromino::D => [0.25, 0.25, 0.25],
+            Tetromino::F => [0.7, 0.7, 0.7],
+        }
+    }
+}
+
 impl super::Parsing for Tetromino {
     fn parse<T: Into<String>>(value: T) -> Result<Self, String> {
         let input = value.into();
