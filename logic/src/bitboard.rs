@@ -37,8 +37,8 @@ impl<const W: usize, const D: usize> Display for Bitboard<W, D> {
         use colored::*;
         let mut str = String::new();
 
-        for x in 0..W {
-            for z in 0..D {
+        for z in 0..D {
+            for x in 0..W {
                 const BLOCK: &'static str = "██";
                 str.push_str(&if self.get(x, z) {
                     BLOCK.white()
