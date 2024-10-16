@@ -1,5 +1,7 @@
-use piece::{Piece, Rotation};
+use action::Action;
+use piece::{Orientation, Piece};
 
+pub mod action;
 pub mod bitboard;
 pub mod piece;
 pub mod queue;
@@ -9,6 +11,25 @@ pub struct State<const WIDTH: usize, const HEIGHT: usize, const DEPTH: usize> {
     pub playfield: [bitboard::Bitboard<WIDTH, DEPTH>; HEIGHT],
 }
 
+impl<const WIDTH: usize, const HEIGHT: usize, const DEPTH: usize> State<WIDTH, HEIGHT, DEPTH> {
+    pub fn process_action(&mut self, action: Action) {
+        match action {
+            Action::MoveForward | Action::MoveBackward | Action::MoveLeft | Action::MoveRight => {
+                todo!()
+            }
+            Action::SoftDrop => todo!(),
+            Action::HardDrop => todo!(),
+            Action::RotateForward => todo!(),
+            Action::RotateBackward => todo!(),
+            Action::RotateRight => todo!(),
+            Action::RotateLeft => todo!(),
+            Action::RotateClockwise => todo!(),
+            Action::RotateCounterClockwise => todo!(),
+            Action::SwapHold => todo!(),
+        }
+    }
+}
+
 impl<const WIDTH: usize, const HEIGHT: usize, const DEPTH: usize> Default
     for State<WIDTH, HEIGHT, DEPTH>
 {
@@ -16,11 +37,11 @@ impl<const WIDTH: usize, const HEIGHT: usize, const DEPTH: usize> Default
         Self {
             current: Piece {
                 position: [0, 0, 0],
-                rotation: Rotation {
-                    direction: piece::Face::Bottom,
+                orientation: Orientation {
+                    direction: piece::Axis::NegZ,
                     angle: piece::Turn::No,
                 },
-                tetromino: queue::tetromino::Tetromino::S,
+                tetromino: queue::tetromino::Tetromino::I,
             },
             playfield: [bitboard::Bitboard::<WIDTH, DEPTH>::default(); HEIGHT],
         }
