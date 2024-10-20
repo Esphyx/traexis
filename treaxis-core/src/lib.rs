@@ -1,14 +1,17 @@
-use action::Action;
-use piece::{Orientation, Piece};
-
 pub mod action;
 pub mod bitboard;
 pub mod piece;
 pub mod queue;
+pub mod tetromino;
+
+use action::Action;
+use bitboard::Bitboard;
+use piece::{shapes, Orientation, Piece};
+use tetromino::Tetromino;
 
 pub struct State<const WIDTH: usize, const HEIGHT: usize, const DEPTH: usize> {
     pub current: Piece,
-    pub playfield: [bitboard::Bitboard<WIDTH, DEPTH>; HEIGHT],
+    pub playfield: [Bitboard<WIDTH, DEPTH>; HEIGHT],
 }
 
 impl<const WIDTH: usize, const HEIGHT: usize, const DEPTH: usize> State<WIDTH, HEIGHT, DEPTH> {
@@ -28,6 +31,45 @@ impl<const WIDTH: usize, const HEIGHT: usize, const DEPTH: usize> State<WIDTH, H
             Action::SwapHold => todo!(),
         }
     }
+
+    pub fn merge(&mut self, shape: u64, pos: (usize, usize, usize)) -> bool {
+        let (x, y, z) = pos;
+
+        if x + shapes::SIZE > WIDTH || y + shapes::SIZE > HEIGHT || z + shapes::SIZE > DEPTH {
+            println!(
+                "Out of bounds! x: {}, y: {}, z: {} width: {}, height: {}, depth: {}",
+                x, y, z, WIDTH, HEIGHT, DEPTH
+            );
+            return false;
+        }
+
+        let layers = self.shape_to_layers(shape, x, z);
+
+        for (i, &layer) in layers.iter().enumerate() {
+            let bb = &mut self.playfield[i + y];
+            if layer & bb.value != 0 {
+                return false;
+            }
+            bb.value |= layer;
+        }
+
+        false
+    }
+
+    pub fn shape_to_layers(&self, mut shape: u64, x: usize, z: usize) -> [u64; 4] {
+        // TODO: make a general method for WIDTH | HEIGHT < 8
+        let mut results = [0; 4];
+        for layer_index in 0..4 {
+            let mut result = 0;
+            for i in 0..4 {
+                let chunk = (shape & 0xf) as u64;
+                result |= chunk << (i * WIDTH);
+                shape >>= 4;
+            }
+            results[layer_index] = result << x + z * WIDTH;
+        }
+        results
+    }
 }
 
 impl<const WIDTH: usize, const HEIGHT: usize, const DEPTH: usize> Default
@@ -41,81 +83,9 @@ impl<const WIDTH: usize, const HEIGHT: usize, const DEPTH: usize> Default
                     direction: piece::Axis::NegZ,
                     angle: piece::Turn::No,
                 },
-                tetromino: queue::tetromino::Tetromino::I,
+                tetromino: Tetromino::I,
             },
             playfield: [bitboard::Bitboard::<WIDTH, DEPTH>::default(); HEIGHT],
         }
-    }
-}
-
-#[cfg(test)]
-pub mod tests {
-    use super::queue::{pattern::*, tetromino::*, Parsing, Queue};
-
-    use strum::IntoEnumIterator;
-
-    #[test]
-    pub fn pattern() {
-        assert_eq!(
-            Pattern::parse("*").unwrap(),
-            Pattern {
-                multiset: Tetromino::iter().map(|tetromino| (tetromino, 1)).collect(),
-                amount: 1
-            }
-        );
-        assert!(Pattern::parse("[OBFS]p9").is_err());
-        assert_eq!(
-            Pattern::parse("[BLIB]").unwrap(),
-            Pattern {
-                multiset: vec![(Tetromino::I, 1), (Tetromino::B, 2), (Tetromino::L, 1)]
-                    .iter()
-                    .cloned()
-                    .collect(),
-                amount: 1
-            }
-        );
-    }
-    #[test]
-    pub fn queue() {
-        let q = Queue {
-            sequence: vec![
-                Pattern {
-                    multiset: vec![(Tetromino::B, 1), (Tetromino::F, 1)]
-                        .iter()
-                        .cloned()
-                        .collect(),
-                    amount: 2,
-                },
-                Pattern {
-                    multiset: vec![(Tetromino::I, 1), (Tetromino::T, 1), (Tetromino::O, 1)]
-                        .iter()
-                        .cloned()
-                        .collect(),
-                    amount: 2,
-                },
-            ],
-            hold: Some(Tetromino::L),
-        };
-
-        assert_eq!(q.to_string(), "L:[BF]p2[ITO]p2");
-        assert_eq!(
-            Queue::parse("T:*[DISD]p4").unwrap(),
-            Queue {
-                sequence: vec![
-                    Pattern {
-                        multiset: Tetromino::iter().map(|tetromino| (tetromino, 1)).collect(),
-                        amount: 1
-                    },
-                    Pattern {
-                        multiset: vec![(Tetromino::D, 2), (Tetromino::I, 1), (Tetromino::S, 1)]
-                            .iter()
-                            .cloned()
-                            .collect(),
-                        amount: 4,
-                    }
-                ],
-                hold: Some(Tetromino::T)
-            }
-        );
     }
 }

@@ -1,4 +1,4 @@
-use super::queue::tetromino::Tetromino;
+use super::tetromino::Tetromino;
 
 pub mod shapes;
 
@@ -9,9 +9,8 @@ pub struct Piece {
 }
 
 impl Piece {
-    pub fn get_shape(&self) -> [[[bool; 4]; 4]; 4] {
-        shapes::SHAPES[self.tetromino as usize][self.orientation.direction as usize]
-            [self.orientation.angle as usize]
+    pub fn get_shape(&self) -> u64 {
+        shapes::SHAPES[0]
     }
 }
 
@@ -27,10 +26,11 @@ impl Orientation {
     }
 }
 
-#[derive(strum_macros::EnumCount, Clone, Copy)]
+#[derive(strum_macros::EnumCount, Clone, Copy, Default)]
 #[repr(usize)]
 pub enum Axis {
     PosX,
+    #[default]
     PosY,
     PosZ,
     NegX,

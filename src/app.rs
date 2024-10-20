@@ -16,13 +16,10 @@ use glium::{
 };
 use treaxis_core::State;
 
-use crate::{
-    client::{
-        linear_algebra::{add, normalize, scale},
-        renderable::Renderable,
-        vertex::Vertex,
-    },
-    DEPTH, HEIGHT, WIDTH,
+use crate::client::{
+    linear_algebra::{normalize, scale},
+    renderable::Renderable,
+    vertex::Vertex,
 };
 
 use super::client::camera::Camera;
@@ -58,20 +55,7 @@ impl App {
 
         let current = &app.state.current;
         let shape = current.get_shape();
-        for (x, row) in shape.iter().enumerate() {
-            for (y, column) in row.iter().enumerate() {
-                for (z, included) in column.iter().enumerate() {
-                    if !included {
-                        continue;
-                    }
-
-                    let [ax, ay, az] = add(current.position, [x, y, z]);
-                    if ax < WIDTH && ay < HEIGHT && az < DEPTH {
-                        app.state.playfield[ay].set(x, z);
-                    }
-                }
-            }
-        }
+        println!("{}", app.state.merge(shape, (0, 0, 0)));
 
         app.window.set_cursor_visible(false);
 

@@ -38,7 +38,7 @@ impl Tetromino {
     }
 }
 
-impl super::Parsing for Tetromino {
+impl super::queue::Parsing for Tetromino {
     fn parse<T: Into<String>>(value: T) -> Result<Self, String> {
         let input = value.into();
         <Self as std::str::FromStr>::from_str(input.as_str())
@@ -51,3 +51,4 @@ impl std::fmt::Display for Tetromino {
         write!(f, "{:?}", self)
     }
 }
+

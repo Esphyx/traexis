@@ -1,6 +1,6 @@
 #[derive(Debug)]
 pub struct Pattern {
-    pub multiset: std::collections::HashMap<super::tetromino::Tetromino, usize>,
+    pub multiset: std::collections::HashMap<super::Tetromino, usize>,
     pub amount: usize,
 }
 
@@ -46,11 +46,11 @@ impl super::Parsing for Pattern {
             .ok_or("Invalid pattern format!")?;
 
         let collection: Vec<_> = if captures.name("all").is_some() {
-            <super::tetromino::Tetromino as strum::IntoEnumIterator>::iter().collect()
+            <super::Tetromino as strum::IntoEnumIterator>::iter().collect()
         } else if let Some(capture) = captures.name("pattern") {
             capture.as_str()[1..capture.len() - 1]
                 .chars()
-                .map(super::tetromino::Tetromino::parse)
+                .map(super::Tetromino::parse)
                 .collect::<Result<Vec<_>, _>>()?
         } else {
             return Err(String::from("Invalid multiset!"));
