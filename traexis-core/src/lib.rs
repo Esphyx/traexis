@@ -32,6 +32,10 @@ impl<const WIDTH: usize, const HEIGHT: usize, const DEPTH: usize> State<WIDTH, H
         }
     }
 
+    pub fn clear(&mut self) {
+        self.playfield = [Bitboard::<WIDTH, DEPTH>::default(); HEIGHT];
+    }
+
     pub fn merge(&mut self, shape: u64, pos: (usize, usize, usize)) -> bool {
         let (x, y, z) = pos;
 

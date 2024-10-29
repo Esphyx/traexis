@@ -53,10 +53,6 @@ impl App {
             app.toggle_fullscreen();
         }
 
-        let current = &app.state.current;
-        let shape = current.get_shape();
-        println!("{}", app.state.merge(shape, (0, 0, 0)));
-
         app.window.set_cursor_visible(false);
 
         event_loop
@@ -130,6 +126,11 @@ impl ApplicationHandler for App {
     ) {
         match event {
             WindowEvent::RedrawRequested => {
+                self.state.clear();
+                let current = &self.state.current;
+                let shape = current.get_shape();
+                self.state.merge(shape, (0, 0, 0));
+
                 let mut target = self.display.draw();
 
                 let (width, height) = target.get_dimensions();
@@ -190,7 +191,6 @@ impl ApplicationHandler for App {
                 ];
                 let vertex_buffer = VertexBuffer::new(&self.display, &axes)
                     .expect("Could not create a vertex buffer!");
-
                 let indices = NoIndices(PrimitiveType::LinesList);
 
                 target
@@ -242,6 +242,14 @@ impl ApplicationHandler for App {
                         }
                         KeyCode::Space => self.camera.mv([0.0, DELTA, 0.0]),
                         KeyCode::ShiftLeft => self.camera.mv([0.0, -DELTA, 0.0]),
+                        KeyCode::KeyT => {
+                            self.state.current.orientation.angle += 1;
+                            println!("{:?}", self.state.current);
+                        }
+                        KeyCode::KeyF => {
+                            self.state.current.orientation.direction += 1;
+                            println!("{:?}", self.state.current);
+                        }
                         _ => {}
                     }
                 }
