@@ -10,7 +10,6 @@ const DEPTH: usize = 8;
 
 fn main() {
     let config = config::Config::read("config.json");
-    println!("{:?}", config);
 
     App::new(config.window_title, config.fullscreen);
 }

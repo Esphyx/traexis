@@ -1,4 +1,5 @@
 use core::f32;
+use std::{collections::HashSet, time::Instant};
 
 use glium::{
     backend::glutin::Display,
@@ -17,10 +18,7 @@ use glium::{
 use traexis_core::State;
 
 use crate::client::{
-    grid_lines::{self, get_grid_lines},
-    linear_algebra::{normalize, scale},
-    renderable::Renderable,
-    vertex::Vertex,
+    axes::get_axes, grid_lines::get_grid_lines, renderable::Renderable, vertex::Vertex,
 };
 
 use super::client::camera::Camera;
@@ -31,6 +29,8 @@ pub struct App {
     display: Display<WindowSurface>,
     state: State<{ crate::WIDTH }, { crate::HEIGHT }, { crate::DEPTH }>,
     camera: Camera,
+    keys: HashSet<KeyCode>,
+    last_time: Instant,
 }
 
 impl App {
@@ -48,6 +48,8 @@ impl App {
             display,
             camera: Default::default(),
             state: Default::default(),
+            keys: HashSet::new(),
+            last_time: Instant::now(),
         };
 
         if fullscreen {
@@ -69,6 +71,10 @@ impl App {
                 .then(|| Fullscreen::Borderless(self.window.primary_monitor())),
         );
     }
+
+    pub fn process_input(&mut self) {
+        self.camera.process_keys(&self.keys);
+    }
 }
 
 impl ApplicationHandler for App {
@@ -80,7 +86,7 @@ impl ApplicationHandler for App {
 
     fn device_event(
         &mut self,
-        _event_loop: &ActiveEventLoop,
+        event_loop: &ActiveEventLoop,
         _device_id: glium::winit::event::DeviceId,
         event: DeviceEvent,
     ) {
@@ -104,21 +110,19 @@ impl ApplicationHandler for App {
                     state,
                 } = key_event;
 
-                match state {
-                    ElementState::Pressed => match physical_key {
-                        PhysicalKey::Code(keycode) => match keycode {
-                            KeyCode::F11 => self.toggle_fullscreen(),
-                            KeyCode::KeyT => {
-                                self.state.current.orientation.angle += 1;
-                                println!("{:?}", self.state.current.orientation);
+                match physical_key {
+                    PhysicalKey::Code(keycode) => match state {
+                        ElementState::Pressed => {
+                            self.keys.insert(keycode);
+                            match keycode {
+                                KeyCode::F11 => self.toggle_fullscreen(),
+                                KeyCode::Escape => event_loop.exit(),
+                                _ => {}
                             }
-                            KeyCode::KeyF => {
-                                self.state.current.orientation.direction += 1;
-                                println!("{:?}", self.state.current.orientation);
-                            }
-                            _ => {}
-                        },
-                        _ => {}
+                        }
+                        ElementState::Released => {
+                            self.keys.remove(&keycode);
+                        }
                     },
                     _ => {}
                 }
@@ -135,6 +139,14 @@ impl ApplicationHandler for App {
     ) {
         match event {
             WindowEvent::RedrawRequested => {
+                let current_time = Instant::now();
+                let delta_time = current_time.duration_since(self.last_time).as_secs_f32();
+                self.last_time = current_time;
+
+                self.process_input();
+
+                self.camera.update(delta_time);
+
                 self.state.clear();
                 let current = &self.state.current;
                 let shape = current.get_shape();
@@ -146,6 +158,7 @@ impl ApplicationHandler for App {
 
                 target.clear_color_and_depth((0.01, 0.01, 0.01, 1.0), 1.0);
 
+                // SETUP RENDERING
                 let program = Program::from_source(
                     &self.display,
                     include_str!("client/shaders/vertex_shader.glsl"),
@@ -170,48 +183,26 @@ impl ApplicationHandler for App {
                     view: self.camera.view_matrix(),
                     perspective: self.camera.perspective(width, height)
                 };
+                // ---------------
 
-                // DRAW AXIS
-                const SIZE: f32 = 4.;
-                let axes = vec![
-                    Vertex {
-                        position: [-SIZE, 0., 0.],
-                        color: [1., 0., 0.],
-                    },
-                    Vertex {
-                        position: [SIZE, 0., 0.],
-                        color: [1., 0., 0.],
-                    },
-                    Vertex {
-                        position: [0., -SIZE, 0.],
-                        color: [0., 1., 0.],
-                    },
-                    Vertex {
-                        position: [0., SIZE, 0.],
-                        color: [0., 1., 0.],
-                    },
-                    Vertex {
-                        position: [0., 0., -SIZE],
-                        color: [0., 0., 1.],
-                    },
-                    Vertex {
-                        position: [0., 0., SIZE],
-                        color: [0., 0., 1.],
-                    },
-                ];
-                let vertex_buffer = VertexBuffer::new(&self.display, &axes)
-                    .expect("Could not create a vertex buffer!");
-                let indices = NoIndices(PrimitiveType::LinesList);
+                // DRAW AXES
+                #[cfg(debug_assertions)]
+                #[allow(unused)]
+                {
+                    let vertex_buffer = VertexBuffer::new(&self.display, &get_axes())
+                        .expect("Could not create a vertex buffer!");
+                    let indices = NoIndices(PrimitiveType::LinesList);
 
-                target
-                    .draw(
-                        &vertex_buffer,
-                        &indices,
-                        &program,
-                        &uniforms,
-                        &draw_parameters,
-                    )
-                    .expect("Could not draw");
+                    target
+                        .draw(
+                            &vertex_buffer,
+                            &indices,
+                            &program,
+                            &uniforms,
+                            &draw_parameters,
+                        )
+                        .expect("Could not draw");
+                }
 
                 // DRAW GRID LINES
                 let vertex_buffer = VertexBuffer::new(&self.display, &get_grid_lines())
@@ -247,30 +238,6 @@ impl ApplicationHandler for App {
                 self.display.resize((new_size.width, new_size.height));
             }
             WindowEvent::CloseRequested => event_loop.exit(),
-            WindowEvent::KeyboardInput { event, .. } => {
-                if let PhysicalKey::Code(keycode) = event.physical_key {
-                    const DELTA: f32 = 0.05;
-                    match keycode {
-                        KeyCode::Escape => event_loop.exit(),
-                        KeyCode::KeyW => {
-                            self.camera
-                                .mv(scale(normalize(self.camera.forward()), DELTA));
-                        }
-                        KeyCode::KeyA => {
-                            self.camera.mv(scale(normalize(self.camera.left()), DELTA));
-                        }
-                        KeyCode::KeyS => {
-                            self.camera.mv(scale(normalize(self.camera.back()), DELTA));
-                        }
-                        KeyCode::KeyD => {
-                            self.camera.mv(scale(normalize(self.camera.right()), DELTA));
-                        }
-                        KeyCode::Space => self.camera.mv([0.0, DELTA, 0.0]),
-                        KeyCode::ShiftLeft => self.camera.mv([0.0, -DELTA, 0.0]),
-                        _ => {}
-                    }
-                }
-            }
             _ => {}
         }
     }

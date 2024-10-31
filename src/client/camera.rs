@@ -1,4 +1,8 @@
-use super::linear_algebra::{add, cross, dot, negate, normalize, rodrigues, subtract};
+use std::collections::HashSet;
+
+use glium::winit::keyboard::KeyCode;
+
+use super::linear_algebra::{add, cross, dot, negate, normalize, rodrigues, scale, subtract};
 
 #[derive(Debug)]
 pub struct Camera {
@@ -8,6 +12,8 @@ pub struct Camera {
     fov: f32,
     znear: f32,
     zfar: f32,
+    pub velocity: [f32; 3],
+    pub acceleration: [f32; 3],
 }
 
 #[allow(unused)]
@@ -48,7 +54,35 @@ impl Camera {
     }
 }
 
+// PROCESS INPUT
 impl Camera {
+    pub fn process_keys(&mut self, keys: &HashSet<KeyCode>) {
+        keys.iter().for_each(|&key| {
+            self.acceleration = add(
+                self.acceleration,
+                match key {
+                    KeyCode::KeyW => self.forward(),
+                    KeyCode::KeyA => self.left(),
+                    KeyCode::KeyS => self.back(),
+                    KeyCode::KeyD => self.right(),
+                    KeyCode::ShiftLeft => self.down(),
+                    KeyCode::Space => self.up(),
+                    _ => [0.; 3],
+                },
+            );
+        });
+    }
+
+    pub fn update(&mut self, delta_time: f32) {
+        let scale_factor = delta_time * 4.;
+        self.velocity = add(self.velocity, scale(self.acceleration, scale_factor));
+        self.mv(scale(self.velocity, scale_factor));
+
+        let damping = 0.95;
+        self.velocity = scale(self.velocity, damping);
+        self.acceleration = [0.; 3];
+    }
+
     pub fn process_mouse(&mut self, delta_x: f32, delta_y: f32) {
         self.target = add(
             self.eye,
@@ -59,7 +93,10 @@ impl Camera {
             ),
         );
     }
+}
 
+// MATRICES
+impl Camera {
     pub fn perspective(&self, width: u32, height: u32) -> [[f32; 4]; 4] {
         let aspect_ratio = height as f32 / width as f32;
         let f = 1.0 / (self.fov / 2.0).tan();
@@ -103,7 +140,7 @@ impl Camera {
 
 impl Default for Camera {
     fn default() -> Self {
-        let eye = [8., 8., -4.];
+        let eye = [-4., 8., -4.];
         let target = add(eye, [0., 0., 1.]);
         Self {
             eye,
@@ -112,6 +149,8 @@ impl Default for Camera {
             fov: 90f32.to_radians(),
             znear: 0.01,
             zfar: 1024.0,
+            velocity: [0.; 3],
+            acceleration: [0.; 3],
         }
     }
 }

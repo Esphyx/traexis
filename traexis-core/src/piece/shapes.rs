@@ -32,10 +32,6 @@ pub const SHAPES: [[[u64; Turn::COUNT]; Axis::COUNT]; Tetromino::COUNT] = [
     ),
 ];
 
-// pub const SHAPES: [[[u64; Turn::COUNT]; Axis::COUNT]; 1] = [generate_orientations(
-//     0b0000_0000_0000_0000_0000_0000_1111_0000_0000_0000_0000_0000_0000_0000_0000_0000,
-// )];
-
 pub const fn generate_orientations(shape: u64) -> [[u64; Turn::COUNT]; Axis::COUNT] {
     let mut orientations = [[0; Turn::COUNT]; Axis::COUNT];
 
