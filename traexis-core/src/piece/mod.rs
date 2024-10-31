@@ -88,6 +88,6 @@ pub enum Turn {
 
 impl AddAssign<u32> for Turn {
     fn add_assign(&mut self, rhs: u32) {
-        *self = Self::from_repr(((*self as usize) + rhs as usize) % Self::COUNT).unwrap();
+        *self = Self::from_repr(((*self as usize) + rhs as usize) % Self::COUNT).expect("Could not convert usize to Turn");
     }
 }

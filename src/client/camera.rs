@@ -103,8 +103,8 @@ impl Camera {
 
 impl Default for Camera {
     fn default() -> Self {
-        let eye = [2.5, 5.0, -3.0];
-        let target = [eye[0], eye[1], eye[2] + 1.0];
+        let eye = [8., 8., -4.];
+        let target = add(eye, [0., 0., 1.]);
         Self {
             eye,
             target,

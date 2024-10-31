@@ -14,9 +14,10 @@ use glium::{
     },
     Program, Surface, VertexBuffer,
 };
-use treaxis_core::State;
+use traexis_core::State;
 
 use crate::client::{
+    grid_lines::{self, get_grid_lines},
     linear_algebra::{normalize, scale},
     renderable::Renderable,
     vertex::Vertex,
@@ -107,6 +108,14 @@ impl ApplicationHandler for App {
                     ElementState::Pressed => match physical_key {
                         PhysicalKey::Code(keycode) => match keycode {
                             KeyCode::F11 => self.toggle_fullscreen(),
+                            KeyCode::KeyT => {
+                                self.state.current.orientation.angle += 1;
+                                println!("{:?}", self.state.current.orientation);
+                            }
+                            KeyCode::KeyF => {
+                                self.state.current.orientation.direction += 1;
+                                println!("{:?}", self.state.current.orientation);
+                            }
                             _ => {}
                         },
                         _ => {}
@@ -162,7 +171,8 @@ impl ApplicationHandler for App {
                     perspective: self.camera.perspective(width, height)
                 };
 
-                const SIZE: f32 = 5.;
+                // DRAW AXIS
+                const SIZE: f32 = 4.;
                 let axes = vec![
                     Vertex {
                         position: [-SIZE, 0., 0.],
@@ -203,6 +213,21 @@ impl ApplicationHandler for App {
                     )
                     .expect("Could not draw");
 
+                // DRAW GRID LINES
+                let vertex_buffer = VertexBuffer::new(&self.display, &get_grid_lines())
+                    .expect("Could not create a vertex buffer!");
+                let indices = NoIndices(PrimitiveType::LinesList);
+                target
+                    .draw(
+                        &vertex_buffer,
+                        &indices,
+                        &program,
+                        &uniforms,
+                        &draw_parameters,
+                    )
+                    .expect("Could not draw!");
+
+                // DRAW GARBAGE
                 let vertex_buffer = VertexBuffer::new(&self.display, &self.state.to_vertices())
                     .expect("Could not create the vertex buffer!");
                 let indices = NoIndices(PrimitiveType::TrianglesList);
@@ -242,14 +267,6 @@ impl ApplicationHandler for App {
                         }
                         KeyCode::Space => self.camera.mv([0.0, DELTA, 0.0]),
                         KeyCode::ShiftLeft => self.camera.mv([0.0, -DELTA, 0.0]),
-                        KeyCode::KeyT => {
-                            self.state.current.orientation.angle += 1;
-                            println!("{:?}", self.state.current);
-                        }
-                        KeyCode::KeyF => {
-                            self.state.current.orientation.direction += 1;
-                            println!("{:?}", self.state.current);
-                        }
                         _ => {}
                     }
                 }

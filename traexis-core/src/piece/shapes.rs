@@ -1,23 +1,40 @@
 use strum::EnumCount;
 
+use crate::tetromino::Tetromino;
+
 use super::{Axis, Turn};
 
 pub const SIZE: usize = 4;
-// pub const SHAPES: [[[u64; Turn::COUNT]; Axis::COUNT]; Tetromino::COUNT] = [
-//     generate_orientations(
-//         0b0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0001_0001_0001_0001,
-//     ),
-//     generate_orientations(todo!()),
-//     generate_orientations(todo!()),
-//     generate_orientations(todo!()),
-//     generate_orientations(todo!()),
-//     generate_orientations(todo!()),
-//     generate_orientations(todo!()),
-// ];
+pub const SHAPES: [[[u64; Turn::COUNT]; Axis::COUNT]; Tetromino::COUNT] = [
+    generate_orientations(
+        0b0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0001_0001_0001_0001,
+    ),
+    generate_orientations(
+        0b0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000,
+    ),
+    generate_orientations(
+        0b0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000,
+    ),
+    generate_orientations(
+        0b0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000,
+    ),
+    generate_orientations(
+        0b0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000,
+    ),
+    generate_orientations(
+        0b0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000,
+    ),
+    generate_orientations(
+        0b0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000,
+    ),
+    generate_orientations(
+        0b0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000,
+    ),
+];
 
-pub const SHAPES: [[[u64; Turn::COUNT]; Axis::COUNT]; 1] = [generate_orientations(
-    0b0000_0000_0000_0000_0000_0000_1111_0000_0000_0000_0000_0000_0000_0000_0000_0000,
-)];
+// pub const SHAPES: [[[u64; Turn::COUNT]; Axis::COUNT]; 1] = [generate_orientations(
+//     0b0000_0000_0000_0000_0000_0000_1111_0000_0000_0000_0000_0000_0000_0000_0000_0000,
+// )];
 
 pub const fn generate_orientations(shape: u64) -> [[u64; Turn::COUNT]; Axis::COUNT] {
     let mut orientations = [[0; Turn::COUNT]; Axis::COUNT];

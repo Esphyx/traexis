@@ -84,7 +84,7 @@ impl<const WIDTH: usize, const HEIGHT: usize, const DEPTH: usize> Default
             current: Piece {
                 position: [0, 0, 0],
                 orientation: Orientation {
-                    direction: piece::Axis::NegZ,
+                    direction: piece::Axis::PosX,
                     angle: piece::Turn::No,
                 },
                 tetromino: Tetromino::I,

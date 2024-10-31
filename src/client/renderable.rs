@@ -1,4 +1,4 @@
-use treaxis_core::State;
+use traexis_core::State;
 
 use super::{linear_algebra::add, vertex::Vertex};
 
