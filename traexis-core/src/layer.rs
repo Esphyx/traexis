@@ -1,11 +1,11 @@
 use std::fmt::Display;
 
 #[derive(Clone, Copy, Default)]
-pub struct Bitboard<const WIDTH: usize = 8, const DEPTH: usize = 8> {
+pub struct Layer<const WIDTH: usize = 8, const DEPTH: usize = 8> {
     pub value: u64,
 }
 
-impl<const WIDTH: usize, const DEPTH: usize> Bitboard<WIDTH, DEPTH> {
+impl<const WIDTH: usize, const DEPTH: usize> Layer<WIDTH, DEPTH> {
     pub fn new() -> Self {
         Self { value: 0 }
     }
@@ -27,13 +27,13 @@ impl<const WIDTH: usize, const DEPTH: usize> Bitboard<WIDTH, DEPTH> {
     }
 }
 
-impl<const WIDTH: usize, const DEPTH: usize> From<u64> for Bitboard<WIDTH, DEPTH> {
+impl<const WIDTH: usize, const DEPTH: usize> From<u64> for Layer<WIDTH, DEPTH> {
     fn from(value: u64) -> Self {
         Self { value }
     }
 }
 
-impl<const WIDTH: usize, const DEPTH: usize> Display for Bitboard<WIDTH, DEPTH> {
+impl<const WIDTH: usize, const DEPTH: usize> Display for Layer<WIDTH, DEPTH> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut output = String::new();
 

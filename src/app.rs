@@ -2,23 +2,19 @@ use core::f32;
 use std::{collections::HashSet, time::Instant};
 
 use glium::{
-    backend::glutin::Display,
-    glutin::surface::WindowSurface,
-    index::{NoIndices, PrimitiveType},
-    winit::{
+    backend::glutin::Display, glutin::surface::WindowSurface, index::{NoIndices, PrimitiveType}, uniforms::{MagnifySamplerFilter, MinifySamplerFilter}, winit::{
         application::ApplicationHandler,
         dpi::PhysicalPosition,
         event::*,
         event_loop::ActiveEventLoop,
         keyboard::{KeyCode, PhysicalKey},
         window::*,
-    },
-    Program, Surface, VertexBuffer,
+    }, Program, Surface, VertexBuffer
 };
-use traexis_core::State;
+use traexis_core::{action::Action, State};
 
 use crate::client::{
-    axes::get_axes, grid_lines::get_grid_lines, renderable::Renderable, vertex::Vertex,
+    atlas, axes::get_axes, grid_lines::get_grid_lines, renderable::Renderable, vertex::Vertex,
 };
 
 use super::client::camera::Camera;
@@ -31,6 +27,7 @@ pub struct App {
     camera: Camera,
     keys: HashSet<KeyCode>,
     last_time: Instant,
+    should_exit: bool,
 }
 
 impl App {
@@ -50,6 +47,7 @@ impl App {
             state: Default::default(),
             keys: HashSet::new(),
             last_time: Instant::now(),
+            should_exit: false,
         };
 
         if fullscreen {
@@ -74,6 +72,43 @@ impl App {
 
     pub fn process_input(&mut self) {
         self.camera.process_keys(&self.keys);
+        self.keys.clone().iter().for_each(|key| match key {
+            KeyCode::F11 => {
+                self.toggle_fullscreen();
+                self.keys.remove(&key);
+            }
+            KeyCode::Escape => {
+                self.should_exit = true;
+                self.keys.remove(&key);
+            }
+            KeyCode::KeyT => {
+                self.state.current.orientation.angle += 5;
+                println!("{:?}", self.state.current.orientation);
+                self.keys.remove(&key);
+            }
+            KeyCode::KeyF => {
+                self.state.current.orientation.direction += 1;
+                println!("{:?}", self.state.current.orientation);
+                self.keys.remove(&key);
+            }
+            KeyCode::ArrowUp => {
+                self.state.process_action(Action::MoveNegZ);
+                self.keys.remove(&key);
+            }
+            KeyCode::ArrowDown => {
+                self.state.process_action(Action::MovePosZ);
+                self.keys.remove(&key);
+            }
+            KeyCode::ArrowLeft => {
+                self.state.process_action(Action::MoveNegX);
+                self.keys.remove(&key);
+            }
+            KeyCode::ArrowRight => {
+                self.state.process_action(Action::MovePosX);
+                self.keys.remove(&key);
+            }
+            _ => {}
+        });
     }
 }
 
@@ -86,7 +121,7 @@ impl ApplicationHandler for App {
 
     fn device_event(
         &mut self,
-        event_loop: &ActiveEventLoop,
+        _event_loop: &ActiveEventLoop,
         _device_id: glium::winit::event::DeviceId,
         event: DeviceEvent,
     ) {
@@ -110,21 +145,11 @@ impl ApplicationHandler for App {
                     state,
                 } = key_event;
 
-                match physical_key {
-                    PhysicalKey::Code(keycode) => match state {
-                        ElementState::Pressed => {
-                            self.keys.insert(keycode);
-                            match keycode {
-                                KeyCode::F11 => self.toggle_fullscreen(),
-                                KeyCode::Escape => event_loop.exit(),
-                                _ => {}
-                            }
-                        }
-                        ElementState::Released => {
-                            self.keys.remove(&keycode);
-                        }
-                    },
-                    _ => {}
+                if let PhysicalKey::Code(key_code) = physical_key {
+                    match state {
+                        ElementState::Pressed => self.keys.insert(key_code),
+                        ElementState::Released => self.keys.remove(&key_code),
+                    };
                 }
             }
             _ => {}
@@ -139,18 +164,24 @@ impl ApplicationHandler for App {
     ) {
         match event {
             WindowEvent::RedrawRequested => {
+                if self.should_exit {
+                    event_loop.exit();
+                }
+
                 let current_time = Instant::now();
-                let delta_time = current_time.duration_since(self.last_time).as_secs_f32();
+                let delta_time = current_time.duration_since(self.last_time);
                 self.last_time = current_time;
+
+                // println!("last frame took {:.3?} which is {:.0?} fps", delta_time, 1. / delta_time.as_secs_f32());
 
                 self.process_input();
 
-                self.camera.update(delta_time);
+                self.camera.update(delta_time.as_secs_f32());
 
                 self.state.clear();
                 let current = &self.state.current;
                 let shape = current.get_shape();
-                self.state.merge(shape, (0, 0, 0));
+                self.state.merge(shape, self.state.current.position);
 
                 let mut target = self.display.draw();
 
@@ -176,12 +207,19 @@ impl ApplicationHandler for App {
                     ..Default::default()
                 };
 
+                let atlas = atlas::get_atlas_texture(&self.display);
+
+                let sampler = glium::uniforms::Sampler::new(&atlas)
+                    .minify_filter(MinifySamplerFilter::Nearest)
+                    .magnify_filter(MagnifySamplerFilter::Nearest);
+
                 let uniforms = glium::uniform! {
                     width: crate::WIDTH as f32,
                     height: crate::HEIGHT as f32,
                     depth: crate::DEPTH as f32,
                     view: self.camera.view_matrix(),
-                    perspective: self.camera.perspective(width, height)
+                    perspective: self.camera.perspective(width, height),
+                    atlas: sampler,
                 };
                 // ---------------
 

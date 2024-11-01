@@ -7,10 +7,10 @@ use super::{Axis, Turn};
 pub const SIZE: usize = 4;
 pub const SHAPES: [[[u64; Turn::COUNT]; Axis::COUNT]; Tetromino::COUNT] = [
     generate_orientations(
-        0b0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0001_0001_0001_0001,
+        0b0000_0000_0000_0000_0010_0010_0010_0010_0000_0000_0000_0000_0000_0000_0000_0000,
     ),
     generate_orientations(
-        0b0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000,
+        0b0000_0000_0000_0000_0000_0000_0110_0000_0000_0000_0110_0000_0000_0000_0000_0000,
     ),
     generate_orientations(
         0b0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000,
@@ -75,12 +75,12 @@ pub const fn rotate_bitboard(shape: u64, axis: Axis) -> u64 {
             while x < 4 {
                 let is_set = shape >> index(x, y, z) & 1;
                 let i = match axis {
-                    Axis::PosX => index(x, SIZE - z - 1, y),
-                    Axis::PosY => index(SIZE - z - 1, y, x),
-                    Axis::PosZ => index(SIZE - y - 1, x, z),
-                    Axis::NegX => index(x, z, SIZE - y - 1),
-                    Axis::NegY => index(z, y, SIZE - x - 1),
-                    Axis::NegZ => index(y, SIZE - x - 1, z),
+                    Axis::PosX => index(x, z, SIZE - y - 1),
+                    Axis::PosY => index(z, y, SIZE - x - 1),
+                    Axis::PosZ => index(y, SIZE - x - 1, z),
+                    Axis::NegX => index(x, SIZE - z - 1, y),
+                    Axis::NegY => index(SIZE - z - 1, y, x),
+                    Axis::NegZ => index(SIZE - y - 1, x, z),
                 };
                 result |= is_set << i;
 

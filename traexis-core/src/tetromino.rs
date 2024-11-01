@@ -36,6 +36,20 @@ impl Tetromino {
             Tetromino::F => [0.7, 0.7, 0.7],
         }
     }
+    pub fn get_sprite_bounds(&self) -> [f32; 4] {
+        const ATLAS_SIZE: f32 = 4.;
+
+        let index = *self as usize as f32;
+        let x = index % ATLAS_SIZE;
+        let y = f32::floor(index / ATLAS_SIZE);
+
+        [
+            x / ATLAS_SIZE,
+            y / ATLAS_SIZE,
+            (x + 1.) / ATLAS_SIZE,
+            (y + 1.) / ATLAS_SIZE,
+        ]
+    }
 }
 
 impl super::queue::Parsing for Tetromino {
@@ -51,4 +65,3 @@ impl std::fmt::Display for Tetromino {
         write!(f, "{:?}", self)
     }
 }
-

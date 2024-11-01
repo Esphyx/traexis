@@ -1,8 +1,9 @@
+#[derive(Debug)]
 pub enum Action {
-    MoveLeft,
-    MoveRight,
-    MoveForward,
-    MoveBackward,
+    MoveNegX,
+    MovePosX,
+    MoveNegZ,
+    MovePosZ,
     SoftDrop,
     HardDrop,
     RotateForward,
@@ -10,10 +11,9 @@ pub enum Action {
     RotateRight,
     RotateLeft,
     RotateClockwise,
-    RotateCounterClockwise,
+    RotateAntiClockwise,
     SwapHold,
 }
-
 
 pub enum Rotation {
     Forward,
