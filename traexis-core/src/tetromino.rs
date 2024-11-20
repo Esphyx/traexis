@@ -24,6 +24,10 @@ pub enum Tetromino {
 }
 
 impl Tetromino {
+    #[inline]
+    pub fn garbage_color() -> [f32; 3] {
+        [0.5; 3]
+    }
     pub fn get_color(&self) -> [f32; 3] {
         match self {
             Tetromino::I => [0., 1., 1.],

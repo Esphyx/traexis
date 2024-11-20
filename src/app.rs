@@ -2,14 +2,19 @@ use core::f32;
 use std::{collections::HashSet, time::Instant};
 
 use glium::{
-    backend::glutin::Display, glutin::surface::WindowSurface, index::{NoIndices, PrimitiveType}, uniforms::{MagnifySamplerFilter, MinifySamplerFilter}, winit::{
+    backend::glutin::Display,
+    glutin::surface::WindowSurface,
+    index::{NoIndices, PrimitiveType},
+    uniforms::{MagnifySamplerFilter, MinifySamplerFilter},
+    winit::{
         application::ApplicationHandler,
         dpi::PhysicalPosition,
         event::*,
         event_loop::ActiveEventLoop,
         keyboard::{KeyCode, PhysicalKey},
         window::*,
-    }, Program, Surface, VertexBuffer
+    },
+    Program, Surface, VertexBuffer,
 };
 use traexis_core::{action::Action, State};
 
@@ -92,11 +97,11 @@ impl App {
                 self.keys.remove(&key);
             }
             KeyCode::ArrowUp => {
-                self.state.process_action(Action::MoveNegZ);
+                self.state.process_action(Action::MovePosZ);
                 self.keys.remove(&key);
             }
             KeyCode::ArrowDown => {
-                self.state.process_action(Action::MovePosZ);
+                self.state.process_action(Action::MoveNegZ);
                 self.keys.remove(&key);
             }
             KeyCode::ArrowLeft => {
@@ -107,6 +112,11 @@ impl App {
                 self.state.process_action(Action::MovePosX);
                 self.keys.remove(&key);
             }
+            KeyCode::NumpadDecimal => {
+                self.state.process_action(Action::SoftDrop);
+                self.keys.remove(&key);
+            }
+            KeyCode::KeyU => {}
             _ => {}
         });
     }
@@ -177,12 +187,6 @@ impl ApplicationHandler for App {
                 self.process_input();
 
                 self.camera.update(delta_time.as_secs_f32());
-
-                self.state.clear();
-                let current = &self.state.current;
-                let shape = current.get_shape();
-                self.state.merge(shape, self.state.current.position);
-
                 let mut target = self.display.draw();
 
                 let (width, height) = target.get_dimensions();

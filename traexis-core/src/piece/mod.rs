@@ -9,7 +9,7 @@ pub mod shapes;
 
 #[derive(Debug)]
 pub struct Piece {
-    pub position: [usize; 3],
+    pub position: [i32; 3],
     pub orientation: Orientation,
     pub tetromino: Tetromino,
 }
@@ -18,6 +18,11 @@ impl Piece {
     pub fn get_shape(&self) -> u64 {
         let Orientation { direction, angle } = self.orientation;
         shapes::SHAPES[self.tetromino as usize][direction as usize][angle as usize]
+    }
+    pub fn contains_mino(shape: u64, u: usize, v: usize, w: usize) -> bool {
+        let index = u + v * shapes::SIZE * shapes::SIZE + w * shapes::SIZE;
+
+        shape >> index & 0x1 == 1
     }
 }
 
@@ -88,6 +93,7 @@ pub enum Turn {
 
 impl AddAssign<u32> for Turn {
     fn add_assign(&mut self, rhs: u32) {
-        *self = Self::from_repr(((*self as usize) + rhs as usize) % Self::COUNT).expect("Could not convert usize to Turn");
+        *self = Self::from_repr(((*self as usize) + rhs as usize) % Self::COUNT)
+            .expect("Could not convert usize to Turn");
     }
 }

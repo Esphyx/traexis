@@ -1,4 +1,8 @@
-use traexis_core::State;
+use traexis_core::{
+    piece::{shapes, Piece},
+    tetromino::Tetromino,
+    State,
+};
 
 use super::{linear_algebra::add, vertex::Vertex};
 
@@ -66,6 +70,27 @@ impl Renderable for State<{ crate::WIDTH }, { crate::HEIGHT }, { crate::DEPTH }>
                         cube.iter().for_each(|cube_vertex| {
                             vertices.push(Vertex {
                                 position: add([x as f32, y as f32, z as f32], cube_vertex.position),
+                                color: Tetromino::garbage_color(),
+                                uv: cube_vertex.uv,
+                            })
+                        });
+                    }
+                }
+            }
+        }
+
+        let current_shape = self.current.get_shape();
+        let [x, y, z] = self.current.position;
+        for u in 0..shapes::SIZE {
+            for v in 0..shapes::SIZE {
+                for w in 0..shapes::SIZE {
+                    if Piece::contains_mino(current_shape, u, v, w) {
+                        cube.iter().for_each(|cube_vertex| {
+                            vertices.push(Vertex {
+                                position: add(
+                                    [u as f32, v as f32, w as f32],
+                                    add(cube_vertex.position, [x as f32, y as f32, z as f32]),
+                                ),
                                 color: self.current.tetromino.get_color(),
                                 uv: cube_vertex.uv,
                             })
