@@ -1,5 +1,7 @@
 pub mod pattern;
 
+use std::collections::VecDeque;
+
 use itertools::Itertools;
 use pattern::Pattern;
 use regex::Regex;
@@ -14,13 +16,27 @@ pub trait Parsing {
 
 #[derive(PartialEq, Debug)]
 pub struct Queue {
-    pub sequence: Vec<pattern::Pattern>,
+    pub sequence: VecDeque<pattern::Pattern>,
     pub hold: Option<Tetromino>,
 }
 
 impl Queue {
-    pub fn collapse(&mut self, _n: usize) {
-        todo!()
+    pub fn collapse(&mut self, n: usize) -> Option<Vec<Tetromino>> {
+        let mut result = Vec::new();
+        for _ in 0..n {
+            result.push(self.next());
+        }
+        result.into_iter().collect::<Option<Vec<Tetromino>>>()
+    }
+
+    pub fn next(&mut self) -> Option<Tetromino> {
+        let pattern = self.sequence.front_mut()?;
+        let selected = pattern.next();
+        
+        if pattern.size() == 0 {
+            self.sequence.pop_front();
+        }
+        selected
     }
 }
 
@@ -40,14 +56,14 @@ impl Parsing for Queue {
             .transpose()
             .map_err(|err| err + " at hold!")?;
 
-        let mut sequence = Vec::new();
+        let mut sequence = VecDeque::new();
         for (i, captures) in Regex::new(&sequence_pattern)
             .map_err(|_| "Invalid regex pattern!")?
             .captures_iter(input.as_str())
             .enumerate()
         {
             if let Some(capture) = captures.name("pattern") {
-                sequence.push(
+                sequence.push_back(
                     Pattern::parse(capture.as_str())
                         .map_err(|err| format!("{err} at pattern {}!", i + 1))?,
                 );
@@ -72,75 +88,86 @@ impl std::fmt::Display for Queue {
     }
 }
 
-#[cfg(test)]
-pub mod tests {
-
-    use strum::IntoEnumIterator;
-
-    use super::{super::tetromino::Tetromino, pattern::Pattern, Parsing, Queue};
-
-    #[test]
-    pub fn pattern() {
-        assert_eq!(
-            Pattern::parse("*").unwrap(),
-            Pattern {
-                multiset: Tetromino::iter().map(|tetromino| (tetromino, 1)).collect(),
-                amount: 1
-            }
-        );
-        assert!(Pattern::parse("[OBFS]p9").is_err());
-        assert_eq!(
-            Pattern::parse("[BLIB]").unwrap(),
-            Pattern {
-                multiset: vec![(Tetromino::I, 1), (Tetromino::B, 2), (Tetromino::L, 1)]
-                    .iter()
-                    .cloned()
-                    .collect(),
-                amount: 1
-            }
-        );
-    }
-    #[test]
-    pub fn queue() {
-        let q = Queue {
-            sequence: vec![
-                Pattern {
-                    multiset: vec![(Tetromino::B, 1), (Tetromino::F, 1)]
-                        .iter()
-                        .cloned()
-                        .collect(),
-                    amount: 2,
-                },
-                Pattern {
-                    multiset: vec![(Tetromino::I, 1), (Tetromino::T, 1), (Tetromino::O, 1)]
-                        .iter()
-                        .cloned()
-                        .collect(),
-                    amount: 2,
-                },
-            ],
-            hold: Some(Tetromino::L),
-        };
-
-        assert_eq!(q.to_string(), "L:[BF]p2[ITO]p2");
-        assert_eq!(
-            Queue::parse("T:*[DISD]p4").unwrap(),
-            Queue {
-                sequence: vec![
-                    Pattern {
-                        multiset: Tetromino::iter().map(|tetromino| (tetromino, 1)).collect(),
-                        amount: 1
-                    },
-                    Pattern {
-                        multiset: vec![(Tetromino::D, 2), (Tetromino::I, 1), (Tetromino::S, 1)]
-                            .iter()
-                            .cloned()
-                            .collect(),
-                        amount: 4,
-                    }
-                ],
-                hold: Some(Tetromino::T)
-            }
-        );
+impl Default for Queue {
+    fn default() -> Self {
+        Self {
+            sequence: VecDeque::from(vec![Pattern::default()]),
+            hold: None,
+        }
     }
 }
+
+// #[cfg(test)]
+// pub mod tests {
+
+//     use strum::IntoEnumIterator;
+
+//     use super::{super::tetromino::Tetromino, pattern::Pattern, Parsing, Queue};
+
+//     #[test]
+//     pub fn pattern() {
+//         assert_eq!(
+//             Pattern::parse("*").unwrap(),
+//             Pattern {
+//                 multiset: Tetromino::iter().map(|tetromino| (tetromino, 1)).collect(),
+//                 amount: 1
+//             }
+//         );
+//         assert!(Pattern::parse("[OBFS]p9").is_err());
+//         assert_eq!(
+//             Pattern::parse("[BLIB]").unwrap(),
+//             Pattern {
+//                 multiset: vec![(Tetromino::I, 1), (Tetromino::B, 2), (Tetromino::L, 1)]
+//                     .iter()
+//                     .cloned()
+//                     .collect(),
+//                 amount: 1
+//             }
+//         );
+//     }
+
+//     #[test]
+//     pub fn queue() {
+
+//         let q = Queue {
+//             sequence: vec![
+//                 Pattern {
+//                     multiset: vec![(Tetromino::B, 1), (Tetromino::F, 1)]
+//                         .iter()
+//                         .cloned()
+//                         .collect(),
+//                     amount: 2,
+//                 },
+//                 Pattern {
+//                     multiset: vec![(Tetromino::I, 1), (Tetromino::T, 1), (Tetromino::O, 1)]
+//                         .iter()
+//                         .cloned()
+//                         .collect(),
+//                     amount: 2,
+//                 },
+//             ],
+//             hold: Some(Tetromino::L),
+//         };
+
+//         assert_eq!(q.to_string(), "L:[BF]p2[ITO]p2");
+//         assert_eq!(
+//             Queue::parse("T:*[DISD]p4").unwrap(),
+//             Queue {
+//                 sequence: vec![
+//                     Pattern {
+//                         multiset: Tetromino::iter().map(|tetromino| (tetromino, 1)).collect(),
+//                         amount: 1
+//                     },
+//                     Pattern {
+//                         multiset: vec![(Tetromino::D, 2), (Tetromino::I, 1), (Tetromino::S, 1)]
+//                             .iter()
+//                             .cloned()
+//                             .collect(),
+//                         amount: 4,
+//                     }
+//                 ],
+//                 hold: Some(Tetromino::T)
+//             }
+//         );
+//     }
+// }

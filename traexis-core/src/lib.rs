@@ -7,11 +7,13 @@ pub mod tetromino;
 use action::Action;
 use layer::Layer;
 use piece::{shapes, Orientation, Piece};
+use queue::Queue;
 use tetromino::Tetromino;
 
 pub struct State<const WIDTH: usize, const HEIGHT: usize, const DEPTH: usize> {
     pub current: Piece,
     pub playfield: [Layer<WIDTH, DEPTH>; HEIGHT],
+    pub queue: Queue,
 }
 
 impl<const WIDTH: usize, const HEIGHT: usize, const DEPTH: usize> State<WIDTH, HEIGHT, DEPTH> {
@@ -52,6 +54,8 @@ impl<const WIDTH: usize, const HEIGHT: usize, const DEPTH: usize> State<WIDTH, H
         self.playfield = [Layer::<WIDTH, DEPTH>::default(); HEIGHT];
     }
 
+    pub fn spawn(&mut self) {}
+
     pub fn try_direction(&mut self, offset: [i32; 3]) -> bool {
         let mut pos = self.current.position;
         pos = [pos[0] + offset[0], pos[1] + offset[1], pos[2] + offset[2]];
@@ -62,9 +66,7 @@ impl<const WIDTH: usize, const HEIGHT: usize, const DEPTH: usize> State<WIDTH, H
         fits
     }
 
-    pub fn place_piece(&mut self) {
-        
-    }
+    pub fn place_piece(&mut self) {}
 
     pub fn fits(&mut self, mut shape: u64, pos: [i32; 3], merge: bool) -> bool {
         let [x, y, z] = pos;
@@ -186,6 +188,7 @@ impl<const WIDTH: usize, const HEIGHT: usize, const DEPTH: usize> Default
                 tetromino: Tetromino::S,
             },
             playfield: [layer::Layer::<WIDTH, DEPTH>::default(); HEIGHT],
+            queue: Queue::default(),
         }
     }
 }

@@ -1,5 +1,12 @@
+use std::collections::HashMap;
+
+use strum::{EnumCount, IntoEnumIterator};
+
+use crate::tetromino::Tetromino;
+
 #[derive(Debug)]
 pub struct Pattern {
+    // should be a constant sized array
     pub multiset: std::collections::HashMap<super::Tetromino, usize>,
     pub amount: usize,
 }
@@ -9,7 +16,7 @@ impl Pattern {
     pub fn size(&self) -> usize {
         self.multiset.values().sum()
     }
-    pub fn next(&mut self) -> super::Tetromino {
+    pub fn next(&mut self) -> Option<Tetromino> {
         let total_weight = self.size();
         let random_value = rand::Rng::gen_range(&mut rand::thread_rng(), 0..total_weight);
 
@@ -27,10 +34,10 @@ impl Pattern {
 
             self.amount -= 1;
 
-            return item;
+            return Some(item);
         }
 
-        panic!("There are no next tetrominos!");
+        None
     }
 }
 
@@ -91,5 +98,20 @@ impl std::fmt::Display for Pattern {
             .map(|(tetromino, &n)| tetromino.to_string().repeat(n))
             .collect();
         write!(f, "[{}]p{}", items.join(""), self.amount)
+    }
+}
+
+impl Default for Pattern {
+    fn default() -> Self {
+        let mut multiset = HashMap::new();
+
+        for variant in Tetromino::iter() {
+            multiset.insert(variant, 1);
+        }
+
+        Self {
+            multiset,
+            amount: Tetromino::COUNT,
+        }
     }
 }
