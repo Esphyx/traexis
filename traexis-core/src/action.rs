@@ -6,12 +6,12 @@ pub enum Action {
     MovePosZ,
     SoftDrop,
     HardDrop,
-    RotateForward,
-    RotateBackward,
-    RotateRight,
-    RotateLeft,
-    RotateClockwise,
-    RotateAntiClockwise,
+    RotatePosX,
+    RotateNegX,
+    RotatePosY,
+    RotateNegY,
+    RotatePosZ,
+    RotateNegZ,
     SwapHold,
 }
 

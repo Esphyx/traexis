@@ -87,13 +87,13 @@ impl App {
                 self.keys.remove(&key);
             }
             KeyCode::KeyT => {
-                self.state.current.orientation.angle += 5;
-                println!("{:?}", self.state.current.orientation);
+                self.state.current_piece.orientation.angle += 5;
+                println!("{:?}", self.state.current_piece.orientation);
                 self.keys.remove(&key);
             }
             KeyCode::KeyF => {
-                self.state.current.orientation.direction += 1;
-                println!("{:?}", self.state.current.orientation);
+                self.state.current_piece.orientation.direction += 1;
+                println!("{:?}", self.state.current_piece.orientation);
                 self.keys.remove(&key);
             }
             KeyCode::ArrowUp => {
@@ -116,7 +116,10 @@ impl App {
                 self.state.process_action(Action::SoftDrop);
                 self.keys.remove(&key);
             }
-            KeyCode::KeyU => {}
+            KeyCode::KeyC => {
+                self.state.process_action(Action::SwapHold);
+                self.keys.remove(&key);
+            }
             _ => {}
         });
     }

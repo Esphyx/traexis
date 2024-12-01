@@ -61,12 +61,12 @@ impl Camera {
             self.acceleration = add(
                 self.acceleration,
                 match key {
-                    KeyCode::Numpad8 => self.forward(),
-                    KeyCode::Numpad4 => self.left(),
-                    KeyCode::Numpad2 => self.back(),
-                    KeyCode::Numpad6 => self.right(),
-                    KeyCode::NumpadEnter => self.down(),
-                    KeyCode::NumpadAdd => self.up(),
+                    KeyCode::KeyW => self.forward(),
+                    KeyCode::KeyA => self.left(),
+                    KeyCode::KeyS => self.back(),
+                    KeyCode::KeyD => self.right(),
+                    KeyCode::ShiftLeft => self.down(),
+                    KeyCode::Space => self.up(),
                     _ => [0.; 3],
                 },
             );

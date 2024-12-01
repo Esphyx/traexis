@@ -12,6 +12,21 @@ impl<const WIDTH: usize, const DEPTH: usize> Layer<WIDTH, DEPTH> {
     }
 
     #[inline]
+    pub fn clear(&mut self) {
+        self.value = 0;
+    }
+
+    #[inline]
+    pub fn is_empty(&self) -> bool {
+        self.value == 0
+    }
+
+    #[inline]
+    pub fn is_full(&self) -> bool {
+        self.value == !0
+    }
+
+    #[inline]
     pub fn set(&mut self, x: usize, z: usize) {
         self.value |= 1u64 << Self::index(x, z);
     }

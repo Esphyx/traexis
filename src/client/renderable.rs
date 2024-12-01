@@ -12,7 +12,7 @@ pub trait Renderable {
 
 impl Renderable for State<{ crate::WIDTH }, { crate::HEIGHT }, { crate::DEPTH }> {
     fn to_vertices(&self) -> Vec<Vertex> {
-        let [x_start, y_start, x_end, y_end] = self.current.tetromino.get_sprite_bounds();
+        let [x_start, y_start, x_end, y_end] = self.current_piece.tetromino.get_sprite_bounds();
         let [x_start, y_start, x_end, y_end] = [x_start, 1. - y_start, x_end, 1. - y_end];
 
         let cube = [
@@ -73,14 +73,15 @@ impl Renderable for State<{ crate::WIDTH }, { crate::HEIGHT }, { crate::DEPTH }>
                                 color: Tetromino::garbage_color(),
                                 uv: cube_vertex.uv,
                             })
-                        });
+                        }); 
                     }
                 }
             }
         }
 
-        let current_shape = self.current.get_shape();
-        let [x, y, z] = self.current.position;
+        let current_shape = self.current_piece.get_shape();
+        let [x, y, z] = self.current_piece.position;
+
         for u in 0..shapes::SIZE {
             for v in 0..shapes::SIZE {
                 for w in 0..shapes::SIZE {
@@ -91,7 +92,7 @@ impl Renderable for State<{ crate::WIDTH }, { crate::HEIGHT }, { crate::DEPTH }>
                                     [u as f32, v as f32, w as f32],
                                     add(cube_vertex.position, [x as f32, y as f32, z as f32]),
                                 ),
-                                color: self.current.tetromino.get_color(),
+                                color: self.current_piece.tetromino.get_color(),
                                 uv: cube_vertex.uv,
                             })
                         });

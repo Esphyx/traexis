@@ -7,13 +7,13 @@ pub mod tetromino;
 use action::Action;
 use layer::Layer;
 use piece::{shapes, Orientation, Piece};
-use queue::Queue;
+use queue::{Parsing, Queue};
 use tetromino::Tetromino;
 
 pub struct State<const WIDTH: usize, const HEIGHT: usize, const DEPTH: usize> {
-    pub current: Piece,
-    pub playfield: [Layer<WIDTH, DEPTH>; HEIGHT],
     pub queue: Queue,
+    pub current_piece: Piece,
+    pub playfield: [Layer<WIDTH, DEPTH>; HEIGHT],
 }
 
 impl<const WIDTH: usize, const HEIGHT: usize, const DEPTH: usize> State<WIDTH, HEIGHT, DEPTH> {
@@ -32,41 +32,101 @@ impl<const WIDTH: usize, const HEIGHT: usize, const DEPTH: usize> State<WIDTH, H
                 self.try_direction([1, 0, 0]);
             }
             Action::SoftDrop => {
-                self.try_direction([0, -1, 0]);
+                if !self.try_direction([0, -1, 0]) {
+                    self.place_piece();
+                }
             }
             Action::HardDrop => while self.try_direction([0, -1, 0]) {},
-            Action::RotateForward => todo!(),
-            Action::RotateBackward => todo!(),
-            Action::RotateRight => todo!(),
-            Action::RotateLeft => todo!(),
-            Action::RotateClockwise => todo!(),
-            Action::RotateAntiClockwise => todo!(),
-            Action::SwapHold => todo!(),
+            Action::RotatePosX => todo!(),
+            Action::RotateNegX => todo!(),
+            Action::RotatePosY => todo!(),
+            Action::RotateNegY => todo!(),
+            Action::RotatePosZ => todo!(),
+            Action::RotateNegZ => todo!(),
+            Action::SwapHold => self.swap_hold(),
         }
 
-        println!(
-            "processing action: {:?} for current piece at: {:?}",
-            action, self.current.position
-        );
+        println!("Current piece location: {:?}", self.current_piece.position);
+        println!("Queue: {}", self.queue);
+    }
+
+    pub fn swap_hold(&mut self) {
+        if self.queue.can_swap {
+            if let Some(hold_type) = self.queue.hold {
+                self.queue.hold = Some(self.current_piece.tetromino);
+                self.current_piece = Self::piece_from_tetromino(hold_type);
+            } else {
+                self.queue.hold = Some(self.current_piece.tetromino);
+                self.spawn();
+            }
+        }
     }
 
     pub fn clear(&mut self) {
         self.playfield = [Layer::<WIDTH, DEPTH>::default(); HEIGHT];
     }
 
-    pub fn spawn(&mut self) {}
-
     pub fn try_direction(&mut self, offset: [i32; 3]) -> bool {
-        let mut pos = self.current.position;
+        let mut pos = self.current_piece.position;
         pos = [pos[0] + offset[0], pos[1] + offset[1], pos[2] + offset[2]];
-        let fits = self.fits(self.current.get_shape(), pos, false);
-        if fits {
-            self.current.position = pos;
+        let does_fit = self.fits(self.current_piece.get_shape(), pos, false);
+        if does_fit {
+            self.current_piece.position = pos;
         }
-        fits
+        does_fit
     }
 
-    pub fn place_piece(&mut self) {}
+    pub fn place_piece(&mut self) {
+        if !self.fits(
+            self.current_piece.get_shape(),
+            self.current_piece.position,
+            true,
+        ) {
+            panic!("could not place piece!");
+        }
+        self.clear_full_layers();
+        self.spawn();
+    }
+
+    pub fn clear_full_layers(&mut self) {
+        let mut l = 0;
+        let mut cleared_layer_count = 0;
+        while l < HEIGHT - cleared_layer_count {
+            let layer = &mut self.playfield[l];
+
+            if layer.is_full() {
+                println!("Layer {l} is full!");
+                cleared_layer_count += 1;
+                for i in l..HEIGHT - cleared_layer_count {
+                    self.playfield[i] = self.playfield[i + 1];
+                }
+            }
+
+            l += 1;
+        }
+
+        for i in 0..cleared_layer_count {
+            self.playfield[HEIGHT - i - 1].clear();
+        }
+    }
+
+    pub fn spawn(&mut self) {
+        self.current_piece =
+            Self::piece_from_tetromino(self.queue.next().expect("There is no next tetromino!"));
+    }
+
+    pub fn piece_from_tetromino(tetromino: Tetromino) -> Piece {
+        let x = (WIDTH - shapes::SIZE) / 2;
+        let z = (DEPTH - shapes::SIZE) / 2;
+
+        let position = [x as i32, HEIGHT as i32, z as i32];
+
+        Piece {
+            position,
+            orientation: Orientation::default(),
+            tetromino,
+        }
+    }
 
     pub fn fits(&mut self, mut shape: u64, pos: [i32; 3], merge: bool) -> bool {
         let [x, y, z] = pos;
@@ -91,6 +151,9 @@ impl<const WIDTH: usize, const HEIGHT: usize, const DEPTH: usize> State<WIDTH, H
         }
 
         for (i, &layer) in layers.iter().enumerate() {
+            if i as i32 + y >= HEIGHT as i32 {
+                continue;
+            }
             if i as i32 + y < 0 {
                 if layer != 0 {
                     return false;
@@ -178,17 +241,16 @@ impl<const WIDTH: usize, const HEIGHT: usize, const DEPTH: usize> Default
     for State<WIDTH, HEIGHT, DEPTH>
 {
     fn default() -> Self {
+        // let mut queue = Queue::parse("[IIII]p4").unwrap();
+        let mut queue = Queue::default();
+        let current_piece =
+            Self::piece_from_tetromino(queue.next().expect("There isn't a next tetromino!"));
+        let playfield = [layer::Layer::<WIDTH, DEPTH>::default(); HEIGHT];
+
         Self {
-            current: Piece {
-                position: [0, 0, 0],
-                orientation: Orientation {
-                    direction: piece::Axis::PosY,
-                    angle: piece::Turn::No,
-                },
-                tetromino: Tetromino::S,
-            },
-            playfield: [layer::Layer::<WIDTH, DEPTH>::default(); HEIGHT],
-            queue: Queue::default(),
+            queue,
+            current_piece,
+            playfield,
         }
     }
 }

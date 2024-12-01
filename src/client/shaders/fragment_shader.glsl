@@ -12,7 +12,7 @@ uniform float depth;
 uniform sampler2D atlas;
 
 void main() {
-    if (vertex_uv != vec2(0, 0)) {
+    if(vertex_uv != vec2(0, 0)) {
         color = texture(atlas, vertex_uv);
     } else {
         color = vec4(vertex_color, 1.0);

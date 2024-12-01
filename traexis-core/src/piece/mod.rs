@@ -1,7 +1,7 @@
 use std::ops::AddAssign;
 
 use strum::EnumCount;
-use strum_macros::FromRepr;
+use strum_macros::{EnumCount, FromRepr};
 
 use super::tetromino::Tetromino;
 
@@ -9,9 +9,9 @@ pub mod shapes;
 
 #[derive(Debug)]
 pub struct Piece {
+    pub tetromino: Tetromino,
     pub position: [i32; 3],
     pub orientation: Orientation,
-    pub tetromino: Tetromino,
 }
 
 impl Piece {
@@ -26,7 +26,7 @@ impl Piece {
     }
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Default)]
 pub struct Orientation {
     pub direction: Axis,
     pub angle: Turn,
@@ -38,7 +38,7 @@ impl Orientation {
     }
 }
 
-#[derive(strum_macros::EnumCount, Clone, Copy, Default, FromRepr, Debug)]
+#[derive(EnumCount, Clone, Copy, Default, FromRepr, Debug)]
 #[repr(usize)]
 pub enum Axis {
     PosX,
@@ -52,6 +52,7 @@ pub enum Axis {
 
 impl Axis {
     pub const fn align(self, shape: u64) -> u64 {
+        // relative to PosY (the default rotation)
         match self {
             Axis::PosX => shapes::rotate_bitboard(shape, Axis::NegZ),
             Axis::PosY => return shape,
@@ -82,9 +83,10 @@ impl AddAssign<u32> for Axis {
     }
 }
 
-#[derive(strum_macros::EnumCount, Clone, Copy, FromRepr, Debug)]
+#[derive(EnumCount, Clone, Copy, FromRepr, Debug, Default)]
 #[repr(usize)]
 pub enum Turn {
+    #[default]
     No,
     Clockwise,
     Half,
